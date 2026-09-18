@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8FAFC">
+<meta name="description" content="Сколько можно потратить сегодня и хватит ли до зарплаты">
+<title>Финансовый Прогноз</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230F172A%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2716%27 fill=%27%2310B981%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%277%27 fill=%27%230F172A%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg hidden xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21z"/><path d="M9 8h6M9 12h6"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-arrow-in" viewBox="0 0 24 24"><path d="M17 7L7 17"/><path d="M17 17H7V7"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H6a2 2 0 0 0-2 2v2"/><circle cx="17" cy="14" r="1"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand__mark"><svg class="icon"><use href="#i-wallet"/></svg></span>
+      <span class="brand__text"><span class="brand__name">Финансовый Прогноз</span><span class="brand__sub label-caps">Сколько можно сегодня</span></span>
+    </div>
+    <nav class="sidebar__nav" aria-label="Разделы">
+      <a class="nav-item" data-tab="dashboard" href="#"><svg class="icon"><use href="#i-home"/></svg><span>Главная</span></a>
+      <a class="nav-item" data-tab="history" href="#"><svg class="icon"><use href="#i-receipt"/></svg><span>История</span></a>
+      <a class="nav-item" data-tab="obligations" href="#"><svg class="icon"><use href="#i-repeat"/></svg><span>Резервы</span></a>
+      <a class="nav-item" data-tab="settings" href="#"><svg class="icon"><use href="#i-settings"/></svg><span>Настройки</span></a>
+    </nav>
+    <button id="sidebar-add" class="btn btn--primary sidebar__add" type="button">
+      <svg class="icon"><use href="#i-plus"/></svg><span>Операция</span><kbd title="Горячая клавиша">N</kbd>
+    </button>
+  </aside>
+
+  <main class="content">
+    <div id="corrupt-banner" class="banner banner--bad" hidden>
+      <svg class="icon"><use href="#i-alert"/></svg>
+      <span>Сохранённые данные не удалось прочитать. Копия оставлена в браузере под ключом <code>finforecast.v1.corrupt</code>, приложение начато с чистого состояния.</span>
+    </div>
+
+    <!-- Главная -->
+    <section id="view-dashboard" class="view" aria-labelledby="h-dashboard">
+      <header class="view__head">
+        <h1 id="h-dashboard">Главная</h1>
+        <span id="dash-date" class="view__sub"></span>
+      </header>
+      <div class="dash">
+        <div class="dash__main">
+          <div id="hero" class="hero hero--ok" aria-live="polite"></div>
+          <div id="stats" class="stats"></div>
+          <form id="afford" class="card afford" novalidate aria-labelledby="afford-label">
+            <span id="afford-label" class="label-caps">Могу ли я потратить…</span>
+            <div class="afford__row">
+              <div class="fw fw--amount fw--amount-sm afford__field">
+                <input id="afford-amount" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма покупки">
+                <span class="fw__cur cur">сом</span>
+                <span class="field-error"></span>
+              </div>
+              <button class="btn btn--primary" type="submit">Проверить</button>
+            </div>
+            <div id="afford-result" class="afford__result" hidden>
+              <div id="afford-lines" class="afford__lines"></div>
+              <div class="afford__actions">
+                <button id="afford-record" type="button" class="btn btn--small btn--ghost">Записать расход</button>
+                <button id="afford-clear" type="button" class="btn btn--small btn--ghost">Очистить</button>
+              </div>
+            </div>
+          </form>
+          <div id="dash-goals" class="goals"></div>
+          <div id="dash-goal-hint" class="card hint" hidden>
+            <svg class="icon"><use href="#i-sparkle"/></svg>
+            <div class="hint__body">
+              <strong>Копите на что-то?</strong>
+              <span>Добавьте цель — покажу, к какой дате накопите, и буду откладывать взнос с каждой зарплаты.</span>
+            </div>
+            <button id="dash-goal-add" class="btn btn--small btn--primary" type="button">Добавить цель</button>
+          </div>
+          <div id="dash-hint" class="card hint" hidden>
+            <svg class="icon"><use href="#i-shield"/></svg>
+            <div class="hint__body">
+              <strong>Добавьте обязательные платежи</strong>
+              <span>Аренда, кредит, связь — всё, что точно придётся заплатить до зарплаты. Иначе лимит на день завышен.</span>
+            </div>
+            <button class="btn btn--small btn--primary" type="button" data-tab="obligations">Добавить</button>
+          </div>
+        </div>
+        <div class="dash__side">
+          <section class="card list-card" aria-labelledby="h-dash-ob">
+            <header class="list-card__head"><h2 id="h-dash-ob">Ближайшие платежи</h2><a class="link" href="#" data-tab="obligations">Все</a></header>
+            <div id="dash-obligations" class="list"></div>
+          </section>
+          <section class="card list-card" aria-labelledby="h-dash-tx">
+            <header class="list-card__head"><h2 id="h-dash-tx">Операции за сегодня</h2><a class="link" href="#" data-tab="history">История</a></header>
+            <div id="dash-recent" class="list"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- История -->
+    <section id="view-history" class="view" aria-labelledby="h-history" hidden>
+      <header class="view__head"><h1 id="h-history">История</h1></header>
+      <div id="history-filter" class="segment segment--wide" role="group" aria-label="Фильтр">
+        <button type="button" data-filter="all" class="is-active">Все</button>
+        <button type="button" data-filter="expense">Траты</button>
+        <button type="button" data-filter="income">Доходы</button>
+      </div>
+      <div id="history-list" class="history"></div>
+    </section>
+
+    <!-- Резервы -->
+    <section id="view-obligations" class="view" aria-labelledby="h-obligations" hidden>
+      <header class="view__head">
+        <div>
+          <h1 id="h-obligations">Резервы</h1>
+          <p class="view__sub">В резерве до зарплаты: <b id="ob-total" class="money"></b></p>
+        </div>
+        <button id="ob-add" class="btn btn--primary view__action" type="button"><svg class="icon"><use href="#i-plus"/></svg><span>Платёж</span></button>
+      </header>
+      <div class="note">
+        <svg class="icon"><use href="#i-shield"/></svg>
+        <span>При оплате сумма списывается с баланса и снимается с резерва — дневной лимит не падает повторно.</span>
+      </div>
+      <div id="ob-list" class="card list"></div>
+      <details id="ob-done" class="card details" hidden>
+        <summary>Завершённые</summary>
+        <div id="ob-done-list" class="list"></div>
+      </details>
+
+      <header class="view__head view__head--section">
+        <div>
+          <h2>Цели</h2>
+          <p class="view__sub">Взнос текущего цикла резервируется из свободных денег, как обязательство перед собой</p>
+        </div>
+        <button id="goal-add" class="btn btn--ghost view__action" type="button"><svg class="icon"><use href="#i-plus"/></svg><span>Цель</span></button>
+      </header>
+      <div id="goal-list" class="goals"></div>
+      <details id="goal-done" class="card details" hidden>
+        <summary>Достигнутые</summary>
+        <div id="goal-done-list" class="goals goals--inner"></div>
+      </details>
+    </section>
+
+    <!-- Настройки -->
+    <section id="view-settings" class="view" aria-labelledby="h-settings" hidden>
+      <header class="view__head"><h1 id="h-settings">Настройки</h1></header>
+
+      <form id="settings-form" class="card form" novalidate>
+        <h2>Прогноз</h2>
+        <div class="form__grid">
+          <label class="fw"><span class="fw__label">Дата следующей зарплаты</span><input class="field" type="date" name="nextIncomeDate"><span class="field-error"></span></label>
+          <label class="fw"><span class="fw__label">Как часто</span>
+            <select class="field" name="incomeFrequency">
+              <option value="MONTHLY">Ежемесячно</option>
+              <option value="BIWEEKLY">Раз в две недели</option>
+              <option value="WEEKLY">Еженедельно</option>
+              <option value="ONCE">Разово</option>
+            </select><span class="field-error"></span></label>
+          <label class="fw"><span class="fw__label">Ожидаемый доход</span><input class="field" name="expectedIncome" inputmode="decimal" autocomplete="off" placeholder="Необязательно"><span class="field-error"></span></label>
+          <label class="fw"><span class="fw__label">Буфер безопасности</span><input class="field" name="safetyBuffer" inputmode="decimal" autocomplete="off" placeholder="0"><span class="field-error"></span></label>
+        </div>
+        <div class="presets-row">
+          <span id="settings-buffer-hint" class="fw__hint"></span>
+          <div id="buffer-presets" class="presets" role="group" aria-label="Буфер от баланса">
+            <button type="button" data-pct="0">0</button>
+            <button type="button" data-pct="5">5 %</button>
+            <button type="button" data-pct="10">10 %</button>
+            <button type="button" data-pct="15">15 %</button>
+            <span class="presets__label">от баланса</span>
+          </div>
+        </div>
+        <h2>Валюта</h2>
+        <label class="fw fw--inline"><span class="fw__label">Подпись сумм</span>
+          <select class="field" name="currency">
+            <option value="KGS">сом (KGS)</option>
+            <option value="RUB">₽ (RUB)</option>
+            <option value="KZT">₸ (KZT)</option>
+            <option value="USD">$ (USD)</option>
+            <option value="EUR">€ (EUR)</option>
+          </select>
+          <span class="fw__hint">Меняет только подпись сумм, без конвертации</span>
+        </label>
+      </form>
+
+      <section class="card form" aria-labelledby="h-balance">
+        <h2 id="h-balance">Баланс</h2>
+        <p class="form__row">Расчётный баланс сейчас: <b id="settings-balance" class="money"></b></p>
+        <form id="adjust-form" class="form__inline" novalidate>
+          <label class="fw"><span class="fw__label">Фактический баланс</span><input class="field" name="newBalance" inputmode="decimal" autocomplete="off" placeholder="Например, 38 500"><span class="field-error"></span></label>
+          <button class="btn btn--ghost" type="submit">Скорректировать</button>
+        </form>
+        <p class="fw__hint">Разница запишется в историю как корректировка — баланс всегда можно отследить.</p>
+      </section>
+
+      <section class="card form" aria-labelledby="h-data">
+        <h2 id="h-data">Данные</h2>
+        <p class="fw__hint">Данные хранятся только в этом браузере. Чтобы перенести на другое устройство — экспортируйте файл и импортируйте его там.</p>
+        <div class="btn-row">
+          <button id="btn-export" class="btn btn--ghost" type="button"><svg class="icon"><use href="#i-download"/></svg><span>Экспорт JSON</span></button>
+          <button id="btn-import" class="btn btn--ghost" type="button"><svg class="icon"><use href="#i-upload"/></svg><span>Импорт JSON</span></button>
+          <input id="file-import" type="file" accept=".json,application/json" hidden>
+        </div>
+        <div class="btn-row">
+          <button id="btn-demo" class="btn btn--ghost" type="button">Загрузить демо-данные</button>
+          <button id="btn-rerun" class="btn btn--ghost" type="button">Пройти настройку заново</button>
+          <button id="btn-reset" class="btn btn--danger" type="button">Удалить все данные</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- Онбординг -->
+    <section id="view-onboarding" class="view view--onboarding" aria-labelledby="h-onb" hidden>
+      <div class="onb card">
+        <div class="onb__head">
+          <span id="onb-counter" class="label-caps">Шаг 1 из 4</span>
+          <span class="brand__name">Финансовый Прогноз</span>
+        </div>
+
+        <div id="onb-step-1" class="onb__step">
+          <h2 id="h-onb">Выберите валюту</h2>
+          <p class="onb__text">Все расчёты и подписи сумм будут в ней. Изменить можно в настройках.</p>
+          <div id="onb-currency" class="onb__grid">
+            <button type="button" class="tile" data-currency="KGS"><b>сом</b><span>KGS</span></button>
+            <button type="button" class="tile" data-currency="RUB"><b>₽</b><span>RUB</span></button>
+            <button type="button" class="tile" data-currency="KZT"><b>₸</b><span>KZT</span></button>
+            <button type="button" class="tile" data-currency="USD"><b>$</b><span>USD</span></button>
+            <button type="button" class="tile" data-currency="EUR"><b>€</b><span>EUR</span></button>
+          </div>
+        </div>
+
+        <div id="onb-step-2" class="onb__step" hidden>
+          <h2>Сколько у вас сейчас денег?</h2>
+          <p class="onb__text">Включая наличные и карты, доступные прямо сейчас.</p>
+          <div class="fw fw--amount">
+            <input id="onb-balance" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0">
+            <span class="fw__cur cur">сом</span>
+            <span class="field-error"></span>
+          </div>
+          <div class="onb__actions">
+            <button id="onb-back-2" class="btn btn--ghost" type="button">Назад</button>
+            <button id="onb-next-2" class="btn btn--primary" type="button">Далее</button>
+          </div>
+        </div>
+
+        <div id="onb-step-3" class="onb__step" hidden>
+          <h2>Когда следующая зарплата?</h2>
+          <p class="onb__text">Свободные деньги делятся ровно на оставшиеся дни, включая сегодняшний.</p>
+          <label class="fw"><span class="fw__label">Дата</span><input id="onb-date" class="field" type="date"><span class="field-error"></span></label>
+          <div class="form__grid">
+            <label class="fw"><span class="fw__label">Сколько ожидаете?</span><input id="onb-expected" class="field" inputmode="decimal" autocomplete="off" placeholder="Необязательно"><span class="field-error"></span></label>
+            <label class="fw"><span class="fw__label">Как часто?</span>
+              <select id="onb-frequency" class="field">
+                <option value="MONTHLY">Ежемесячно</option>
+                <option value="BIWEEKLY">Раз в две недели</option>
+                <option value="WEEKLY">Еженедельно</option>
+                <option value="ONCE">Разово</option>
+              </select><span class="field-error"></span></label>
+          </div>
+          <div class="onb__actions">
+            <button id="onb-back-3" class="btn btn--ghost" type="button">Назад</button>
+            <button id="onb-next-3" class="btn btn--primary" type="button">Далее</button>
+          </div>
+        </div>
+
+        <div id="onb-step-4" class="onb__step" hidden>
+          <span class="onb__check"><svg class="icon"><use href="#i-check"/></svg></span>
+          <h2>Прогноз готов!</h2>
+          <p id="onb-result" class="onb__result"></p>
+          <p class="onb__text">Обязательные платежи (аренда, кредит, связь) резервируются до зарплаты и не попадают в дневной лимит. Добавьте их сейчас — иначе лимит будет завышен.</p>
+          <div class="onb__actions onb__actions--stack">
+            <button id="onb-to-obligations" class="btn btn--primary" type="button">Добавить обязательные платежи</button>
+            <button id="onb-finish" class="btn btn--ghost" type="button">На главную</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Разделы">
+    <button class="tab-item" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-home"/></svg><span>Главная</span></button>
+    <button class="tab-item" type="button" data-tab="history"><svg class="icon"><use href="#i-receipt"/></svg><span>История</span></button>
+    <button class="tab-item" type="button" data-tab="obligations"><svg class="icon"><use href="#i-repeat"/></svg><span>Резервы</span></button>
+    <button class="tab-item" type="button" data-tab="settings"><svg class="icon"><use href="#i-settings"/></svg><span>Настройки</span></button>
+  </nav>
+  <button id="fab" class="fab" type="button" aria-label="Добавить"><svg class="icon"><use href="#i-plus"/></svg></button>
+</div>
+
+<!-- Операция -->
+<dialog id="dlg-tx" class="sheet" aria-labelledby="tx-title">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <form method="dialog" novalidate>
+    <div class="sheet__head">
+      <h2 id="tx-title">Новая операция</h2>
+      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <div id="tx-type" class="segment" role="group" aria-label="Тип операции">
+      <button type="button" data-type="EXPENSE" class="is-active">Расход</button>
+      <button type="button" data-type="INCOME">Доход</button>
+    </div>
+    <div class="fw fw--amount">
+      <input id="tx-amount" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма">
+      <span class="fw__cur cur">сом</span>
+      <span class="field-error"></span>
+    </div>
+    <div id="tx-match" class="match" hidden>
+      <span>Это оплата «<b id="tx-match-title"></b>»?</span>
+      <button id="tx-match-yes" type="button" class="btn btn--small btn--primary">Да, списать резерв</button>
+    </div>
+    <div id="tx-categories" class="chips" role="group" aria-label="Категория"></div>
+    <label class="fw"><span class="fw__label">Комментарий</span><input id="tx-note" class="field" maxlength="80" autocomplete="off" placeholder="Необязательно"><span class="field-error"></span></label>
+    <div id="tx-payday" hidden>
+      <label class="fw"><span class="fw__label">Следующая зарплата</span><input id="tx-next-date" class="field" type="date"><span class="field-error"></span></label>
+      <label id="tx-goals" class="check" hidden>
+        <input id="tx-goals-check" type="checkbox" checked>
+        <span id="tx-goals-text">Сразу отложить в цели</span>
+      </label>
+    </div>
+    <button id="tx-submit" class="btn btn--primary btn--block" type="submit">Записать</button>
+  </form>
+</dialog>
+
+<!-- Обязательство -->
+<dialog id="dlg-ob" class="sheet" aria-labelledby="ob-title-h">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <form method="dialog" novalidate>
+    <div class="sheet__head">
+      <h2 id="ob-title-h">Новый обязательный платёж</h2>
+      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <label class="fw"><span class="fw__label">Название</span><input id="ob-name" class="field" maxlength="60" autocomplete="off" placeholder="Аренда, кредит, связь…"><span class="field-error"></span></label>
+    <div class="fw fw--amount fw--amount-sm">
+      <span class="fw__label">Сумма</span>
+      <input id="ob-amount" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма">
+      <span class="fw__cur cur">сом</span>
+      <span class="field-error"></span>
+    </div>
+    <div class="form__grid">
+      <label class="fw"><span class="fw__label">Срок</span><input id="ob-date" class="field" type="date"><span class="field-error"></span></label>
+      <label class="fw"><span class="fw__label">Периодичность</span>
+        <select id="ob-frequency" class="field">
+          <option value="MONTHLY">Ежемесячно</option>
+          <option value="ONCE">Один раз</option>
+        </select><span class="field-error"></span></label>
+    </div>
+    <button id="ob-submit" class="btn btn--primary btn--block" type="submit">Добавить в резерв</button>
+  </form>
+</dialog>
+
+<!-- Цель -->
+<dialog id="dlg-goal" class="sheet" aria-labelledby="goal-title-h">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <form method="dialog" novalidate>
+    <div class="sheet__head">
+      <h2 id="goal-title-h">Новая цель</h2>
+      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <label class="fw"><span class="fw__label">Название</span><input id="goal-name" class="field" maxlength="60" autocomplete="off" placeholder="Квартира, той, отпуск…"><span class="field-error"></span></label>
+    <div class="fw fw--amount fw--amount-sm">
+      <span class="fw__label">Сумма цели</span>
+      <input id="goal-target" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма цели">
+      <span class="fw__cur cur">сом</span>
+      <span class="field-error"></span>
+    </div>
+    <div class="form__grid">
+      <label class="fw"><span class="fw__label">Уже отложено вне приложения</span><input id="goal-saved" class="field" inputmode="decimal" autocomplete="off" placeholder="0"><span class="field-error"></span></label>
+      <label class="fw"><span class="fw__label">Взнос за цикл</span><input id="goal-per-cycle" class="field" inputmode="decimal" autocomplete="off" placeholder="0"><span class="field-error"></span></label>
+    </div>
+    <label class="fw"><span class="fw__label">Срок (необязательно)</span><input id="goal-deadline" class="field" type="date"><span class="field-error"></span></label>
+    <p id="goal-hint" class="fw__hint goal-hint"></p>
+    <button id="goal-submit" class="btn btn--primary btn--block" type="submit">Добавить цель</button>
+  </form>
+</dialog>
+
+<!-- Взнос / возврат -->
+<dialog id="dlg-contrib" class="sheet sheet--small" aria-labelledby="contrib-title">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <form method="dialog" novalidate>
+    <div class="sheet__head">
+      <h2 id="contrib-title">Отложить в цель</h2>
+      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <p id="contrib-sub" class="fw__hint"></p>
+    <div class="fw fw--amount fw--amount-sm">
+      <input id="contrib-amount" class="field field--amount" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Сумма">
+      <span class="fw__cur cur">сом</span>
+      <span class="field-error"></span>
+    </div>
+    <button id="contrib-submit" class="btn btn--primary btn--block" type="submit">Отложить</button>
+  </form>
+</dialog>
+
+<!-- Подтверждение -->
+<dialog id="dlg-confirm" class="sheet sheet--small" aria-labelledby="confirm-text">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <form method="dialog" novalidate>
+    <p id="confirm-text" class="confirm__text"></p>
+    <div class="btn-row btn-row--end">
+      <button id="confirm-cancel" type="button" class="btn btn--ghost" data-close>Отмена</button>
+      <button id="confirm-ok" type="button" class="btn btn--danger">Удалить</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <span id="toast-text"></span>
+  <button id="toast-undo" type="button" hidden>Отменить</button>
+</div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
