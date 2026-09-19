@@ -342,8 +342,9 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 36px;
 .sidebar__logout { justify-content: flex-start; }
 .lock__forgot { align-self: center; white-space: normal; text-align: center; color: var(--ink-2); min-height: var(--tap); }
 .lock__hint { text-align: center; }
-.view__tools { display: flex; align-items: center; gap: 6px; }
-.dash__logout { width: 40px; min-height: 40px; }
+.dash__title { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.dash__logout { flex: 0 0 auto; gap: 6px; padding: 6px 12px; }
+.dash__logout .icon { width: 18px; height: 18px; }
 body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.is-locked .sidebar__add, body.is-locked .sidebar__logout { display: none; }
 
 /* ---------- онбординг ---------- */

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260919132500">
+<link rel="stylesheet" href="styles.css?v=20260919132731">
 </head>
 <body>
 
@@ -85,11 +85,11 @@
     <!-- Главная -->
     <section id="view-dashboard" class="view" aria-labelledby="h-dashboard">
       <header class="view__head view__head--dash">
-        <h1 id="h-dashboard" class="view__date"></h1>
-        <div class="view__tools">
+        <div class="dash__title">
+          <h1 id="h-dashboard" class="view__date"></h1>
           <span id="dash-streak" class="streak" hidden></span>
-          <button id="dash-logout" class="btn btn--icon dash__logout" type="button" aria-label="Выйти" title="Выйти"><svg class="icon"><use href="#i-logout"/></svg></button>
         </div>
+        <button id="dash-logout" class="btn btn--small btn--ghost dash__logout" type="button" title="Закрыть приложение до следующего входа"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button>
       </header>
       <div class="dash">
         <div class="dash__main">
@@ -527,7 +527,7 @@
   <button id="toast-undo" type="button" hidden>Отменить</button>
 </div>
 
-<script src="engine.js?v=20260919132500"></script>
-<script src="app.js?v=20260919132500"></script>
+<script src="engine.js?v=20260919132731"></script>
+<script src="app.js?v=20260919132731"></script>
 </body>
 </html>
