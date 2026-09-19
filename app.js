@@ -139,7 +139,20 @@
     for (const c of $$('.cur')) c.textContent = Engine.money.CURRENCIES[s.profile.currency];
     ({ dashboard: renderDashboard, history: renderHistory, obligations: renderObligations, settings: renderSettings, onboarding: renderOnboarding })[tab]();
   }
-  function showTab(tab) { store.commit(Engine.ops.setTab(store.state, tab)); window.scrollTo(0, 0); }
+  // Системная кнопка «Назад» (телефон, браузер): вкладки, шторки и шаги настройки — в истории браузера
+  let navBusy = false;
+  function showTab(tab, { push = true } = {}) {
+    store.commit(Engine.ops.setTab(store.state, tab));
+    window.scrollTo(0, 0);
+    if (push) { try { history.pushState({ tab }, '', '#' + tab); } catch (_) { /* file:// */ } }
+  }
+  window.addEventListener('popstate', (e) => {
+    const st = e.state || {};
+    const open = $$('dialog').filter(d => d.open);
+    if (open.length) { navBusy = true; for (const d of open) d.close(); navBusy = false; }
+    if (st.onb && !store.state.profile.onboarded) { onb.step = st.onb; render(); return; }
+    if (st.tab && store.state.profile.onboarded && Engine.TABS.includes(st.tab) && st.tab !== store.state.ui.tab) showTab(st.tab, { push: false });
+  });
   document.addEventListener('click', (e) => {
     const n = e.target.closest('[data-tab]');
     if (!n) return;
@@ -522,14 +535,16 @@
     }
   }
   $('#onb-currency').addEventListener('click', (e) => { const b = e.target.closest('[data-currency]'); if (!b) return; onb.currency = b.dataset.currency; renderOnboarding(); });
-  $('#onb-next-1').addEventListener('click', () => { onb.step = 2; render(); $('#onb-balance').focus(); });
+  function onbGo(step) { onb.step = step; render(); try { history.pushState({ onb: step }, ''); } catch (_) { /* file:// */ } }
+  $('#onb-next-1').addEventListener('click', () => { onbGo(2); $('#onb-balance').focus(); });
   $('#onb-demo').addEventListener('click', () => { store.commit(Engine.demoState(today())); toast('Это пример. Начать заново: Настройки → Удалить все данные'); });
   $('#onb-next-2').addEventListener('click', () => {
     if (!validate($('#onb-balance'), Engine.money.parse, 'Введите сумму больше нуля')) return;
-    onb.step = 3; render(); $('#onb-date').focus();
+    onbGo(3); $('#onb-date').focus();
   });
-  $('#onb-back-2').addEventListener('click', () => { onb.step = 1; render(); });
-  $('#onb-back-3').addEventListener('click', () => { onb.step = 2; render(); });
+  $('#onb-back-2').addEventListener('click', () => onbGo(1));
+  $('#onb-back-3').addEventListener('click', () => onbGo(2));
+  $('#onb-back-4').addEventListener('click', () => onbGo(3));
   $('#onb-next-3').addEventListener('click', () => {
     const d = $('#onb-date').value;
     if (!Engine.dates.isValid(d) || d <= today()) return setError($('#onb-date'), 'Укажите дату позже сегодняшней');
@@ -541,13 +556,14 @@
       expectedIncome: expected, incomeFrequency: $('#onb-frequency').value, date: today(), at: now(),
     });
     store.state.profile.onboarded = false; // финальный экран показываем ещё внутри онбординга
-    onb.step = 4; render();
+    onbGo(4);
   });
   function finishOnboarding(tab) {
     store.state.profile.onboarded = true;
     onb.step = 1;
     store.commit(Engine.ops.setTab(store.state, tab));
     window.scrollTo(0, 0);
+    try { history.replaceState({ tab }, '', '#' + tab); } catch (_) { /* file:// */ }
   }
   $('#onb-finish').addEventListener('click', () => { finishOnboarding('dashboard'); toast('Готово. Вечером спрошу, сколько потратили'); });
   $('#onb-to-obligations').addEventListener('click', () => { finishOnboarding('obligations'); openObDialog(null); });
@@ -556,13 +572,17 @@
   function openDialog(dlg) {
     if (dlg.open) return;
     dlg.showModal();
+    try { history.pushState({ ...(history.state || {}), dialog: dlg.id }, ''); } catch (_) { /* file:// */ }
     document.body.style.overflow = 'hidden';
     const first = dlg.querySelector('input:not([type=hidden]):not([disabled]):not([type=checkbox]), select, textarea');
     if (first) setTimeout(() => first.focus(), 60);
   }
   function closeDialog(dlg) { if (dlg.open) dlg.close(); }
   for (const dlg of $$('dialog')) {
-    dlg.addEventListener('close', () => { document.body.style.overflow = ''; });
+    dlg.addEventListener('close', () => {
+      document.body.style.overflow = '';
+      if (!navBusy && history.state && history.state.dialog === dlg.id) history.back(); // закрыли кнопкой — убрать запись из истории
+    });
     dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDialog(dlg); });
     for (const b of $$('[data-close]', dlg)) b.addEventListener('click', () => closeDialog(dlg));
     let startY = null;
@@ -1119,5 +1139,8 @@
 
   // ---------- запуск ----------
   store.load();
+  const hashTab = location.hash.replace('#', '');
+  if (store.state.profile.onboarded && Engine.TABS.includes(hashTab) && hashTab !== store.state.ui.tab) store.state = Engine.ops.setTab(store.state, hashTab);
+  try { history.replaceState(store.state.profile.onboarded ? { tab: store.state.ui.tab } : { onb: 1 }, '', store.state.profile.onboarded ? '#' + store.state.ui.tab : location.pathname + location.search); } catch (_) { /* file:// */ }
   render();
 })();

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260919131048">
+<link rel="stylesheet" href="styles.css?v=20260919132355">
 </head>
 <body>
 
@@ -24,6 +24,7 @@
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
   <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
   <symbol id="i-arrow-in" viewBox="0 0 24 24"><path d="M17 7L7 17"/><path d="M17 17H7V7"/></symbol>
   <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H6a2 2 0 0 0-2 2v2"/><circle cx="17" cy="14" r="1"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
@@ -149,7 +150,7 @@
 
     <!-- История -->
     <section id="view-history" class="view" aria-labelledby="h-history" hidden>
-      <header class="view__head"><h1 id="h-history">История</h1></header>
+      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-history">История</h1></div></header>
       <div id="history-filter" class="segment segment--wide" role="group" aria-label="Фильтр">
         <button type="button" data-filter="all" class="is-active">Все</button>
         <button type="button" data-filter="expense">Траты</button>
@@ -162,6 +163,7 @@
     <section id="view-obligations" class="view" aria-labelledby="h-obligations" hidden>
       <header class="view__head">
         <div>
+          <button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
           <h1 id="h-obligations">Платежи и цели</h1>
           <p class="hint">Эти деньги уже заняты и не входят в лимит на день. Сейчас отложено: <b id="ob-total" class="num"></b></p>
         </div>
@@ -189,7 +191,7 @@
 
     <!-- Настройки -->
     <section id="view-settings" class="view" aria-labelledby="h-settings" hidden>
-      <header class="view__head"><h1 id="h-settings">Настройки</h1></header>
+      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-settings">Настройки</h1></div></header>
 
       <section class="card form" aria-labelledby="h-security">
         <h2 id="h-security">Защита и выход</h2>
@@ -331,6 +333,7 @@
           <div class="onb__actions onb__actions--stack">
             <button id="onb-to-obligations" class="btn btn--primary" type="button">Добавить платёж</button>
             <button id="onb-finish" class="btn btn--ghost" type="button">На главную</button>
+            <button id="onb-back-4" class="back back--center" type="button"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
           </div>
         </div>
       </div>
@@ -351,8 +354,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="tx-title">Новая трата</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <div id="tx-cycle" class="callout callout--muted" hidden>
       <div class="callout__lines">
@@ -405,8 +409,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="ob-title-h">Обязательный платёж</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <p class="hint">Аренда, кредит, связь — то, что точно придётся заплатить. Сумма откладывается из лимита до срока.</p>
     <label class="fw"><span class="fw__label">Название</span><input id="ob-name" class="field" maxlength="60" autocomplete="off" placeholder="Аренда, кредит, связь…"><span class="field-error" role="alert"></span></label>
@@ -433,8 +438,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="goal-title-h">Новая цель</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <label class="fw"><span class="fw__label">Название</span><input id="goal-name" class="field" maxlength="60" autocomplete="off" placeholder="Квартира, той, отпуск…"><span class="field-error" role="alert"></span></label>
     <div class="fw fw--amount fw--amount-sm">
@@ -458,8 +464,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="contrib-title">Отложить в цель</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <p id="contrib-sub" class="hint"></p>
     <div class="fw fw--amount fw--amount-sm">
@@ -476,8 +483,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="pin-title">PIN-код</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <p id="pin-sub" class="hint"></p>
     <label id="pin-current-wrap" class="fw"><span class="fw__label">Текущий PIN</span><input id="pin-current" class="field field--pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off"><span class="field-error" role="alert"></span></label>
@@ -492,8 +500,9 @@
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
     <div class="sheet__head">
+      <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
       <h2 id="info-title">Как посчитано</h2>
-      <button type="button" class="btn btn--icon" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      <button type="button" class="btn btn--icon sheet__close" data-close aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <dl id="info-lines" class="calc"></dl>
     <button type="button" class="btn btn--primary btn--block" data-close>Понятно</button>
@@ -504,6 +513,7 @@
 <dialog id="dlg-confirm" class="sheet sheet--small" aria-labelledby="confirm-text">
   <div class="sheet__handle" aria-hidden="true"></div>
   <form method="dialog" novalidate>
+    <button type="button" class="back sheet__back" data-close><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button>
     <p id="confirm-text" class="confirm__text"></p>
     <div class="btn-row btn-row--end">
       <button id="confirm-cancel" type="button" class="btn btn--ghost" data-close>Отмена</button>
@@ -517,7 +527,7 @@
   <button id="toast-undo" type="button" hidden>Отменить</button>
 </div>
 
-<script src="engine.js?v=20260919131048"></script>
-<script src="app.js?v=20260919131048"></script>
+<script src="engine.js?v=20260919132355"></script>
+<script src="app.js?v=20260919132355"></script>
 </body>
 </html>
