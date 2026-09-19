@@ -97,7 +97,7 @@ const Engine = (() => {
   function defaultProfile() {
     return { currency: 'KGS', initialBalance: 0, nextIncomeDate: '', incomeDay: 1, incomeFrequency: 'MONTHLY',
       expectedIncome: null, safetyBuffer: 0, cycleStartDate: '', cycleStartFree: null, onboarded: false,
-      pinHash: null, pinSalt: null };
+      pinHash: null, pinSalt: null, theme: 'system' };
   }
   function defaultState() {
     return { version: 1, profile: defaultProfile(), transactions: [], obligations: [], goals: [], checkins: [], ui: { tab: 'dashboard' } };

@@ -3,27 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F8FAFC">
+<meta name="theme-color" content="#F6F4EF">
 <meta name="robots" content="noindex">
 <title>Вы вышли — Финансовый Прогноз</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230F172A%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2716%27 fill=%27%2310B981%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%277%27 fill=%27%230F172A%27/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2718%27 fill=%27%23151A24%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2717%27 fill=%27none%27 stroke=%27%2312A66F%27 stroke-width=%278%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%275%27 fill=%27%23F6F4EF%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg: #F8FAFC; --surface: #FFFFFF; --ink: #0F172A; --ink-2: #64748B; --ink-3: #475569; --line: #E2E8F0; --line-soft: #EEF2F7; }
+  :root { --bg: #F6F4EF; --surface: #FFFFFF; --ink: #151A24; --ink-2: #646A78; --ink-3: #4E5563; --line: #E5E1D8; --line-soft: #EEEBE4; --on-ink: #FFFFFF; --ok: #12A66F; color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111419; --surface: #1A1E26; --ink: #F2EFE9; --ink-2: #9AA0AB; --ink-3: #C3C8D1; --line: #2B313C; --line-soft: #232831; --on-ink: #111419; --ok: #3ECF8E; color-scheme: dark; }
+  }
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--ink); font: 400 15px/1.5 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
-  .mark { width: 48px; height: 48px; border-radius: 14px; background: var(--line-soft); display: grid; place-items: center; }
-  .mark svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  h1 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -.01em; }
+  .card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 14px 32px -18px rgba(21, 26, 36, .22); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .mark { width: 48px; height: 48px; border-radius: 14px; background: var(--line-soft); color: var(--ok); display: grid; place-items: center; }
+  .mark svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { margin: 0; font-family: "Unbounded", "Manrope", system-ui, sans-serif; font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; }
   p { margin: 0; color: var(--ink-3); }
   .hint { font-size: 13px; color: var(--ink-2); }
   .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer; }
-  .btn--primary { background: var(--ink); color: #fff; }
+  .btn--primary { background: var(--ink); color: var(--on-ink); }
   .btn--ghost { background: transparent; border-color: var(--line); color: var(--ink); }
-  .btn--ghost:hover { background: var(--bg); }
+  .btn--ghost:hover { background: var(--line-soft); }
   .brand { font-size: 13px; font-weight: 600; color: var(--ink-2); }
 </style>
 </head>

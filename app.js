@@ -56,6 +56,33 @@
   const toInput = (minor) => (minor ? String(minor / 100).replace('.', ',') : '');
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+  // ---------- тема: по настройке телефона или выбор в настройках ----------
+  const THEME_COLORS = { light: '#F6F4EF', dark: '#111419' };
+  const darkMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function applyTheme() {
+    const pref = store.state.profile.theme || 'system';
+    if (pref === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = pref;
+    const actual = pref === 'system' ? (darkMedia && darkMedia.matches ? 'dark' : 'light') : pref;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = THEME_COLORS[actual];
+  }
+  if (darkMedia && darkMedia.addEventListener) darkMedia.addEventListener('change', applyTheme);
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Главная цифра «набегает» до значения; при повторном рендере той же суммы — без анимации
+  let lastHeroValue = null;
+  function countUp(node, minor, format) {
+    const from = lastHeroValue == null || Math.abs(lastHeroValue - minor) > 100000000 ? 0 : lastHeroValue;
+    lastHeroValue = minor;
+    if (reducedMotion || from === minor || minor === 0) { node.textContent = format(minor); return; }
+    const start = performance.now(), dur = 700;
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k, 3);
+      node.textContent = format(Math.round(from + (minor - from) * e));
+      if (k < 1 && node.isConnected) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
   // ---------- DOM-хелперы (пользовательский текст только через textContent) ----------
   function el(tag, attrs = {}, children = []) {
     const node = document.createElement(tag);
@@ -118,6 +145,7 @@
   let renderedToday = today();
   function render() {
     renderedToday = today();
+    applyTheme();
     const s = store.state;
     const locked = isLocked();
     document.body.classList.toggle('is-locked', locked);
@@ -280,14 +308,38 @@
     const pct = f.status === 'HEALTHY' && f.budgetToday > 0 ? Math.min(100, Math.round(f.spentToday / f.budgetToday * 100)) : 100;
     const sub = f.status === 'HEALTHY' ? `из ${fmtWhole(f.budgetToday)} · потрачено ${fmt(f.spentToday)}`
       : `Потрачено ${fmt(f.spentToday)} из ${fmtWhole(f.budgetToday)} — на ${fmt(f.overspentToday)} больше`;
+    const valueNode = el('div', { class: 'hero__value' });
     hero.append(
       el('div', { class: 'hero__head' }, [el('span', { class: 'label-caps', text: label }), el('span', { class: 'badge', text: badge })]),
-      el('div', { class: 'hero__value', text: fmtWhole(value) }),
+      valueNode,
       el('div', { class: 'hero__sub', text: sub }),
       el('div', { class: 'hero__bar', role: 'progressbar', 'aria-label': 'Потрачено сегодня', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuetext': `потрачено ${fmt(f.spentToday)} из ${fmtWhole(f.budgetToday)}` }, el('div', { class: 'hero__fill', style: `width:${pct}%` })),
+      sparkline(f),
       heroFoot(f),
     );
+    countUp(valueNode, value, fmtWhole);
   }
+  // Последние 7 дней: столбик — траты дня относительно дневного бюджета; выше плана — янтарный
+  function sparkline(f) {
+    const s = store.state, t = today();
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = Engine.dates.addDays(t, -i);
+      days.push({ date: d, spent: Engine.calc.spentToday(s, d), known: s.checkins.includes(d) });
+    }
+    if (!days.some(x => x.spent > 0 || x.known)) return null;
+    const budget = f.budgetToday || 0;
+    const max = Math.max(budget, ...days.map(x => x.spent)) || 1;
+    return el('div', { class: 'spark', 'aria-label': 'Траты за последние 7 дней', role: 'img' }, days.map(x => {
+      const h = x.spent > 0 ? Math.max(8, Math.round(x.spent / max * 100)) : 0;
+      const cls = 'spark__bar' + (x.spent === 0 ? ' is-empty' : budget && x.spent > budget ? ' is-over' : '') + (x.date === t ? ' is-today' : '');
+      return el('div', { class: 'spark__day' + (x.date === t ? ' is-today' : ''), title: `${fdate(x.date)}: ${x.spent ? fmt(x.spent) : x.known ? 'без трат' : 'нет записей'}` }, [
+        el('div', { class: cls, style: `height:${x.spent > 0 ? h : 6}%` }),
+        el('span', { class: 'spark__label', text: WEEKDAY[new Date(x.date + 'T12:00:00').getDay()] }),
+      ]);
+    }));
+  }
+  const WEEKDAY = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 
   function renderStats(f) {
     const s = store.state;
@@ -357,14 +409,22 @@
     store.commit(state);
     toast('Запись удалена', { undo: () => { store.commit(Engine.ops.restoreTransaction(store.state, removed)); toast('Запись восстановлена'); } });
   }
+  const CATEGORY_ICONS = {
+    'Продукты': { icon: 'basket', cls: 'cat--food' }, 'Кафе': { icon: 'coffee', cls: 'cat--cafe' }, 'Транспорт': { icon: 'car', cls: 'cat--transport' },
+    'Покупки': { icon: 'bag', cls: 'cat--shop' }, 'Дом': { icon: 'house', cls: 'cat--home' }, 'Здоровье': { icon: 'heart', cls: 'cat--health' },
+    'Развлечения': { icon: 'film', cls: 'cat--fun' }, 'День': { icon: 'moon', cls: 'cat--day' }, 'Другое': { icon: 'receipt', cls: '' },
+  };
+  const INCOME_ICONS = { 'Зарплата': 'wallet', 'Фриланс': 'laptop', 'Подарок': 'gift' };
   function txRow(t, { compact = false } = {}) {
     const isIn = t.type === 'INCOME', isAdj = t.type === 'ADJUSTMENT', isSaving = t.type === 'SAVING';
     const inflow = isIn || (isSaving && t.amount < 0);
     const title = isSaving ? (t.amount > 0 ? `Взнос в «${t.note}»` : `Из цели «${t.note}»`) : (t.note || t.category);
     const sub = isAdj ? 'Корректировка баланса' : isSaving ? 'Накопление' : `${t.note ? t.category + ' · ' : ''}${ftime(t.at)}`;
     const amount = isAdj || isIn ? fmt(t.amount, { sign: true }) : isSaving ? fmt(-t.amount, { sign: true }) : fmt(-t.amount);
+    const cat = !isIn && !isAdj && !isSaving && !t.obligationId ? (CATEGORY_ICONS[t.category] || CATEGORY_ICONS['Другое']) : null;
     return el('div', { class: 'row' + (compact ? ' row--compact' : '') }, [
-      el('span', { class: 'row__icon' + (inflow ? ' row__icon--in' : '') }, icon(isIn ? 'arrow-in' : isAdj ? 'settings' : isSaving ? 'sparkle' : t.obligationId ? 'repeat' : 'receipt')),
+      el('span', { class: 'row__icon' + (inflow ? ' row__icon--in' : '') + (cat ? ' ' + cat.cls : '') },
+        icon(cat ? cat.icon : isIn ? (INCOME_ICONS[t.category] || 'arrow-in') : isAdj ? 'settings' : isSaving ? 'sparkle' : 'repeat')),
       el('div', { class: 'row__body' }, [el('span', { class: 'row__title', text: title }), el('span', { class: 'row__sub', text: sub })]),
       el('span', { class: 'row__amount money' + (inflow ? ' is-in' : ''), text: amount }),
       compact ? null : el('div', { class: 'row__actions' }, el('button', { type: 'button', class: 'btn btn--icon', 'aria-label': 'Удалить запись', onclick: () => deleteTx(t.id) }, icon('trash'))),
@@ -1086,6 +1146,7 @@
     form.expectedIncome.value = toInput(p.expectedIncome);
     form.safetyBuffer.value = toInput(p.safetyBuffer);
     form.currency.value = p.currency;
+    form.theme.value = p.theme || 'system';
     $('#settings-buffer-hint').textContent = p.safetyBuffer ? `Сейчас: ${fmt(p.safetyBuffer)} не входят в цифру на день` : 'Сейчас: без запаса';
     $('#settings-balance').textContent = fmt(f.balance);
     const saved = s.goals.reduce((a, g) => a + Math.max(0, Engine.calc.goalSaved(s, g) - (g.initialSaved || 0)), 0);
@@ -1101,6 +1162,8 @@
       patch.incomeFrequency = form.incomeFrequency.value;
     } else if (name === 'currency') {
       patch.currency = form.currency.value;
+    } else if (name === 'theme') {
+      patch.theme = form.theme.value;
     } else if (name === 'expectedIncome') {
       const raw = form.expectedIncome.value.trim();
       const v = raw ? Engine.money.parse(raw) : null;
