@@ -96,10 +96,10 @@ const Engine = (() => {
   }
   function defaultProfile() {
     return { currency: 'KGS', initialBalance: 0, nextIncomeDate: '', incomeDay: 1, incomeFrequency: 'MONTHLY',
-      expectedIncome: null, safetyBuffer: 0, cycleStartDate: '', onboarded: false };
+      expectedIncome: null, safetyBuffer: 0, cycleStartDate: '', cycleStartFree: null, onboarded: false };
   }
   function defaultState() {
-    return { version: 1, profile: defaultProfile(), transactions: [], obligations: [], goals: [], ui: { tab: 'dashboard' } };
+    return { version: 1, profile: defaultProfile(), transactions: [], obligations: [], goals: [], checkins: [], ui: { tab: 'dashboard' } };
   }
   // Демо-данные относительно `today`, чтобы не устаревали
   function demoState(today) {
@@ -141,8 +141,9 @@ const Engine = (() => {
         dueDay: o.dueDate && dates.isValid(o.dueDate) ? dates.dayOf(o.dueDate) : 1, createdAt: 0, ...o,
       })) : [];
     s.goals = Array.isArray(raw.goals)
-      ? raw.goals.filter(g => g && g.id && Number.isInteger(g.target)).map(g => ({ initialSaved: 0, perCycle: 0, deadline: null, createdAt: 0, ...g }))
+      ? raw.goals.filter(g => g && g.id && Number.isInteger(g.target)).map(g => ({ initialSaved: 0, perCycle: 0, deadline: null, skippedCycle: null, createdAt: 0, ...g }))
       : [];
+    s.checkins = Array.isArray(raw.checkins) ? raw.checkins.filter(d => dates.isValid(d)) : [];
     s.ui = { tab: raw.ui && TABS.includes(raw.ui.tab) ? raw.ui.tab : 'dashboard' };
     return s;
   }
@@ -193,6 +194,7 @@ const Engine = (() => {
     activeGoals(s) { return s.goals.filter(g => !calc.goalDone(s, g)).sort((a, b) => a.createdAt - b.createdAt); },
     // Взнос текущего цикла, ещё не сделанный: резервируется как обязательство перед собой
     goalPending(s, g) {
+      if (g.skippedCycle && g.skippedCycle === s.profile.cycleStartDate) return 0; // взнос пропущен в этом цикле
       const remaining = Math.max(0, g.target - calc.goalSaved(s, g));
       const pending = Math.max(0, (g.perCycle || 0) - calc.goalContributedThisCycle(s, g));
       return Math.min(pending, remaining);
@@ -265,7 +267,7 @@ const Engine = (() => {
       const paydayLine = `После зарплаты ${dates.format(f.nextIncomeDate, { today })} — из нового бюджета.`;
       if (amount <= f.free) {
         r.verdict = 'YES_BUT';
-        r.lines.push(`Да, но ${fm(amount - f.remainingToday)} сверх лимита на сегодня.`);
+        r.lines.push(`Да, но ${fmDay(amount - f.remainingToday)} сверх цифры на сегодня.`);
         if (r.daysLeft >= 1) {
           r.dailyAfter = Math.floor((f.free - amount) / r.daysLeft);
           r.lines.push(`Остальные ${r.daysLeft} дн. — по ${fmDay(r.dailyAfter)} в день вместо ${fmDay(f.budgetToday)}.`);
@@ -303,6 +305,74 @@ const Engine = (() => {
       return r;
     },
 
+    // ----- уровень 1: покрытие дней, итог цикла, дефицит, темп -----
+    // Серия дней подряд, за которые известны траты (операция или отметка «без трат»)
+    coverageStreak(s, today) {
+      const known = new Set(s.transactions.map(t => t.date));
+      for (const d of s.checkins || []) known.add(d);
+      const todayKnown = known.has(today);
+      let d = todayKnown ? today : dates.addDays(today, -1);
+      let days = 0;
+      while (known.has(d) && days < 3650) { days++; d = dates.addDays(d, -1); }
+      return { days, todayKnown };
+    },
+    cycleSummary(s, today) {
+      const start = s.profile.cycleStartDate && dates.isValid(s.profile.cycleStartDate) ? s.profile.cycleStartDate : today;
+      const spent = s.transactions
+        .filter(t => t.type === 'EXPENSE' && !t.obligationId && t.date >= start && t.date <= today)
+        .reduce((a, t) => a + t.amount, 0);
+      // Остаток — то, что не понадобится и на платежи следующего цикла (их оплатит новая зарплата)
+      const p = s.profile;
+      const nextAfter = calc.nextIncomeAfter(p);
+      const nextCycleObs = p.nextIncomeDate && nextAfter
+        ? s.obligations.filter(o => o.status === 'ACTIVE' && o.dueDate >= p.nextIncomeDate && o.dueDate < nextAfter).reduce((a, o) => a + o.amount, 0)
+        : 0;
+      return { start, days: Math.max(1, dates.daysBetween(start, today) + 1), spent,
+        planned: Number.isInteger(p.cycleStartFree) ? p.cycleStartFree : null,
+        leftover: calc.forecast(s, today).free - nextCycleObs };
+    },
+    // Варианты закрыть дефицит; первым — тот, что закрывает его целиком и стоит меньше всего
+    deficitPlan(s, today) {
+      const f = calc.forecast(s, today);
+      if (f.status !== 'CRITICAL') return null;
+      const gap = f.cashGap;
+      const options = [];
+      for (const o of calc.reservedObligations(s)) options.push({ type: 'postponeObligation', id: o.id, title: o.title, effect: o.amount });
+      for (const g of calc.activeGoals(s)) { const pend = calc.goalPending(s, g); if (pend > 0) options.push({ type: 'skipGoal', id: g.id, title: g.title, effect: pend }); }
+      if (f.buffer > 0) options.push({ type: 'buffer', effect: f.buffer });
+      // При «мягком» дефиците (виноваты цели/запас) сначала предлагаем их, а не перенос платежей
+      const rank = (o) => f.gapKind === 'soft'
+        ? { skipGoal: 0, buffer: 1, postponeObligation: 2 }[o.type]
+        : { postponeObligation: 0, buffer: 1, skipGoal: 2 }[o.type];
+      options.sort((a, b) => {
+        if (rank(a) !== rank(b)) return rank(a) - rank(b);
+        const aOk = a.effect >= gap, bOk = b.effect >= gap;
+        if (aOk !== bOk) return aOk ? -1 : 1;
+        return aOk ? a.effect - b.effect : b.effect - a.effect;
+      });
+      return { gap, options, dailyCut: f.daysRemaining > 0 ? Math.ceil(gap / f.daysRemaining) : gap };
+    },
+    // Темп трат за последние дни против оставшихся денег
+    pace(s, today) {
+      const start = s.profile.cycleStartDate && dates.isValid(s.profile.cycleStartDate) ? s.profile.cycleStartDate : today;
+      const windowDays = Math.min(7, Math.max(1, dates.daysBetween(start, today) + 1));
+      if (windowDays < 3) return null;
+      const f = calc.forecast(s, today);
+      if (f.daysRemaining <= 0) return null;
+      const from = dates.addDays(today, -(windowDays - 1));
+      const spent = s.transactions
+        .filter(t => t.type === 'EXPENSE' && !t.obligationId && t.date >= from && t.date <= today)
+        .reduce((a, t) => a + t.amount, 0);
+      const avgDaily = Math.round(spent / windowDays);
+      const daysOfMoney = avgDaily > 0 ? Math.floor(Math.max(0, f.free) / avgDaily) : Infinity;
+      const runOut = daysOfMoney < f.daysRemaining;
+      return {
+        windowDays, avgDaily,
+        runOutDate: runOut ? dates.addDays(today, daysOfMoney) : null,
+        leftoverAtPayday: runOut ? null : f.free - avgDaily * f.daysRemaining,
+      };
+    },
+
     forecast(s, today) {
       const p = s.profile;
       const balance = calc.balance(s), buffer = p.safetyBuffer || 0;
@@ -312,7 +382,7 @@ const Engine = (() => {
       const spent = calc.spentToday(s, today);
       const D = p.nextIncomeDate && dates.isValid(p.nextIncomeDate) ? dates.daysBetween(today, p.nextIncomeDate) : 0;
       const r = { today, nextIncomeDate: p.nextIncomeDate, daysRemaining: D, balance, reserved, obligationsReserve, goalsReserve, buffer, free, spentToday: spent,
-        budgetToday: 0, remainingToday: 0, overspentToday: 0, cashGap: 0, status: 'HEALTHY', title: '', subtitle: '' };
+        budgetToday: 0, remainingToday: 0, overspentToday: 0, cashGap: 0, gapKind: null, status: 'HEALTHY', title: '', subtitle: '' };
       const fm = (v) => money.format(v, p.currency);
       if (D <= 0) {
         r.status = 'PAYDAY';
@@ -321,11 +391,18 @@ const Engine = (() => {
       } else if (free < 0) {
         r.status = 'CRITICAL';
         r.cashGap = -free;
-        r.title = 'Денег может не хватить до зарплаты';
-        const parts = [];
-        if (goalsReserve > 0) parts.push(`взносы в цели ${fm(goalsReserve)}`);
-        if (buffer > 0) parts.push(`буфер ${fm(buffer)}`);
-        r.subtitle = `Дефицит с учётом резервов: ${fm(r.cashGap)}` + (parts.length ? ` (в т. ч. ${parts.join(', ')})` : '');
+        // «Мягкий» дефицит: на платежи хватает, не хватает только на взносы в цели и запас
+        r.gapKind = balance - obligationsReserve >= 0 ? 'soft' : 'hard';
+        if (r.gapKind === 'soft') {
+          const parts = [];
+          if (goalsReserve > 0) parts.push('взносы в цели');
+          if (buffer > 0) parts.push('запас');
+          r.title = `На платежи хватает, на ${parts.join(' и ')} — нет`;
+          r.subtitle = `Не хватает ${fm(r.cashGap)}. Уменьшите взнос или запас — или подождите зарплаты`;
+        } else {
+          r.title = 'Денег может не хватить до зарплаты';
+          r.subtitle = `Платежи до зарплаты больше, чем есть денег, на ${fm(Math.min(r.cashGap, obligationsReserve - balance))}`;
+        }
       } else {
         // Бюджет дня стабилен в течение дня: сегодняшние траты возвращаются в числитель
         r.budgetToday = Math.floor((free + spent) / D);
@@ -451,6 +528,24 @@ const Engine = (() => {
     },
     deleteObligation(s, id) { const n = clone(s); n.obligations = n.obligations.filter(o => o.id !== id); return n; },
     reactivateObligation(s, id) { const n = clone(s); const o = findOb(n, id); if (o) o.status = 'ACTIVE'; return n; },
+    // Перенос платежа на день зарплаты: выходит из резерва этого цикла, вернётся в следующем
+    postponeObligation(s, id) {
+      const n = clone(s);
+      const o = findOb(n, id);
+      if (o && n.profile.nextIncomeDate && dates.isValid(n.profile.nextIncomeDate)) o.dueDate = n.profile.nextIncomeDate;
+      return n;
+    },
+    markNoSpend(s, date) {
+      const n = clone(s);
+      if (!n.checkins.includes(date)) n.checkins.push(date);
+      return n;
+    },
+    skipGoalCycle(s, id) {
+      const n = clone(s);
+      const g = n.goals.find(x => x.id === id);
+      if (g) g.skippedCycle = n.profile.cycleStartDate || null;
+      return n;
+    },
     // Ручная правка баланса — транзакция ADJUSTMENT на разницу, история остаётся детерминированной
     adjustBalance(s, newBalance, { date, at }) {
       const diff = newBalance - calc.balance(s);
@@ -463,6 +558,8 @@ const Engine = (() => {
         ? ops.addTransaction(s, { type: 'INCOME', amount, category: SPECIAL.SALARY, note: '', date, at })
         : clone(s);
       Object.assign(n.profile, { nextIncomeDate, incomeDay: dates.dayOf(nextIncomeDate), cycleStartDate: date });
+      for (const g of n.goals) g.skippedCycle = null; // новый цикл — пропуски прошлого не действуют
+      n.profile.cycleStartFree = calc.forecast(n, date).free; // план цикла — свободные деньги на его старте
       return n;
     },
     postponePayday(s, today) {
@@ -484,6 +581,7 @@ const Engine = (() => {
       else n = ops.adjustBalance(n, balance, { date, at });
       Object.assign(n.profile, { currency, nextIncomeDate, incomeDay: dates.dayOf(nextIncomeDate), expectedIncome: expectedIncome || null,
         incomeFrequency, cycleStartDate: n.profile.cycleStartDate || date, onboarded: true });
+      n.profile.cycleStartFree = calc.forecast(n, date).free;
       return n;
     },
     setTab(s, tab) { const n = clone(s); n.ui.tab = TABS.includes(tab) ? tab : 'dashboard'; return n; },
