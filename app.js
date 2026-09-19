@@ -123,7 +123,6 @@
     document.body.classList.toggle('is-locked', locked);
     if (locked) {
       for (const v of $$('.view')) v.hidden = v.id !== 'view-lock';
-      $('#fab').hidden = true;
       $('#corrupt-banner').hidden = true;
       clearRendered();
       renderLock();
@@ -136,7 +135,7 @@
     for (const n of $$('.nav-item, .tab-item')) {
       if (n.dataset.tab === tab) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
     }
-    $('#fab').hidden = onboarding;
+    $('#fab').hidden = false;
     document.body.classList.toggle('is-onboarding', onboarding);
     $('#corrupt-banner').hidden = !store.corrupt;
     for (const c of $$('.cur')) c.textContent = Engine.money.CURRENCIES[s.profile.currency];
@@ -177,7 +176,11 @@
     showTab(n.dataset.tab);
   });
   $('#fab').addEventListener('click', () => openTxDialog({ mode: 'expense' }));
+  $('#fab-income').addEventListener('click', () => openTxDialog({ mode: 'income' }));
   $('#sidebar-add').addEventListener('click', () => openTxDialog({ mode: 'expense' }));
+  $('#sidebar-income').addEventListener('click', () => openTxDialog({ mode: 'income' }));
+  $('#dash-add-expense').addEventListener('click', () => openTxDialog({ mode: 'expense' }));
+  $('#dash-add-income').addEventListener('click', () => openTxDialog({ mode: 'income' }));
 
   // ---------- главная ----------
   const HERO_CLASS = { HEALTHY: 'ok', WARNING: 'warn', CRITICAL: 'bad', PAYDAY: 'payday' };
@@ -293,8 +296,10 @@
     if (f.obligationsReserve) parts.push(`платежи ${fnum(f.obligationsReserve)}`);
     if (f.goalsReserve) parts.push(`цели ${fnum(f.goalsReserve)}`);
     if (f.buffer) parts.push(`запас ${fnum(f.buffer)}`);
+    const cycle = Engine.calc.cycleSummary(s, today());
+    const moneySub = cycle.income > 0 ? `получено за цикл +${fnum(cycle.income)}` : (saved ? `без накоплений (${fnum(saved)} в целях)` : 'на жизнь');
     $('#stats').replaceChildren(
-      stat('Всего денег', fmt(f.balance), saved ? `без накоплений (${fnum(saved)} в целях)` : 'на жизнь'),
+      stat('Всего денег', fmt(f.balance), moneySub),
       f.free < 0 ? stat('Не хватает', fmt(-f.free), 'до зарплаты', true) : stat('Можно тратить', fmt(f.free), 'до зарплаты'),
       stat('Отложено', fmt(f.reserved + f.buffer), parts.join(' · ') || 'платежи и цели'),
       stat('До зарплаты', f.daysRemaining > 0 ? `${f.daysRemaining} дн.` : '—', f.nextIncomeDate ? fdate(f.nextIncomeDate) : null),
@@ -617,7 +622,7 @@
     tx.type = mode === 'expense' ? 'EXPENSE' : 'INCOME';
     tx.match = null; tx.matchDismissed = false; tx.day = 'today';
     tx.category = mode === 'payday' ? Engine.SPECIAL.SALARY : Engine.CATEGORIES[tx.type][0];
-    $('#tx-title').textContent = mode === 'payday' ? 'Зарплата получена' : mode === 'income' ? 'Новый доход' : 'Новая трата';
+    $('#tx-title').textContent = mode === 'payday' ? 'Зарплата получена' : mode === 'income' ? 'Внести доход' : 'Новая трата';
     $('#tx-type').hidden = mode === 'payday';
     $('#tx-date').hidden = mode === 'payday';
     $('#tx-categories').hidden = mode === 'payday';
@@ -643,15 +648,15 @@
       $('#tx-leftover-check').checked = false; // по желанию: большой остаток лучше не замораживать молча
       $('#tx-leftover-text').textContent = goal ? `Остаток ${fmt(paydayLeftover)} → отложить в «${goal.title}»` : `Остаток ${fmt(paydayLeftover)} → в запас`;
     }
-    $('#tx-submit').textContent = mode === 'payday' ? 'Подтвердить зарплату' : mode === 'income' ? 'Записать доход' : 'Записать трату';
+    $('#tx-submit').textContent = mode === 'payday' ? 'Подтвердить зарплату' : mode === 'income' ? 'Внести доход' : 'Записать трату';
     [$('#tx-amount'), $('#tx-next-date')].forEach(clearError);
     renderTxType(); renderTxDay(); renderTxCategories(); renderTxMatch(); renderPaydayPreview();
     openDialog(dlg);
   }
   function renderTxType() {
     for (const b of $$('#tx-type [data-type]')) b.classList.toggle('is-active', b.dataset.type === tx.type);
-    $('#tx-submit').textContent = tx.mode === 'payday' ? 'Подтвердить зарплату' : tx.type === 'INCOME' ? 'Записать доход' : 'Записать трату';
-    $('#tx-title').textContent = tx.mode === 'payday' ? 'Зарплата получена' : tx.type === 'INCOME' ? 'Новый доход' : 'Новая трата';
+    $('#tx-submit').textContent = tx.mode === 'payday' ? 'Подтвердить зарплату' : tx.type === 'INCOME' ? 'Внести доход' : 'Записать трату';
+    $('#tx-title').textContent = tx.mode === 'payday' ? 'Зарплата получена' : tx.type === 'INCOME' ? 'Внести доход' : 'Новая трата';
   }
   function renderTxDay() { for (const b of $$('#tx-date [data-date]')) b.classList.toggle('is-active', b.dataset.date === tx.day); }
   function renderTxCategories() {
@@ -723,7 +728,7 @@
     const f = Engine.calc.forecast(store.state, today());
     toast(tx.type === 'EXPENSE'
       ? (tx.day === 'yesterday' ? `Записано за вчера: ${fmt(amount)}` : f.status === 'HEALTHY' ? `Записано. На сегодня осталось ${fmtWhole(f.remainingToday)}` : `Записано ${fmt(amount)}`)
-      : `Доход ${fmt(amount)} записан`);
+      : (f.status === 'HEALTHY' ? `Доход ${fmt(amount)} внесён. На день теперь ${fmtWhole(f.budgetToday)}` : `Доход ${fmt(amount)} внесён`));
   });
 
   // ---------- диалог платежа ----------

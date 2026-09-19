@@ -74,17 +74,19 @@ code { font: 500 13px var(--font-mono); background: rgba(15, 23, 42, .06); paddi
 .tab-item .icon { width: 22px; height: 22px; }
 .tab-item[aria-current="page"] { color: var(--ink); font-weight: 700; }
 
+.fab-row { position: fixed; right: 16px; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px); z-index: 21; display: flex; gap: 8px; }
 .fab {
-  position: fixed; right: 16px; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px); z-index: 21;
   height: 52px; padding: 0 20px 0 16px; border-radius: var(--r-pill); border: 0; background: var(--ink); color: #fff;
   box-shadow: var(--shadow-3); display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px;
   transition: transform .15s var(--ease);
 }
+.fab--secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(15, 23, 42, .10); }
 .fab .icon { width: 22px; height: 22px; }
 .fab:active { transform: scale(.96); }
+.sidebar__income { justify-content: flex-start; }
 
-body.is-onboarding .tabbar, body.is-onboarding .fab,
-body.is-onboarding .sidebar__nav, body.is-onboarding .sidebar__add { display: none; }
+body.is-onboarding .tabbar, body.is-onboarding .fab-row,
+body.is-onboarding .sidebar__nav, body.is-onboarding .sidebar__add, body.is-onboarding .sidebar__income, body.is-onboarding .sidebar__logout { display: none; }
 
 /* ---------- карточки и выноски ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; }
@@ -346,7 +348,7 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 36px;
 .logout-btn { flex: 0 0 auto; gap: 6px; padding: 6px 12px; }
 .logout-btn .icon { width: 18px; height: 18px; }
 .view__tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.is-locked .sidebar__add, body.is-locked .sidebar__logout { display: none; }
+body.is-locked .tabbar, body.is-locked .fab-row, body.is-locked .sidebar__nav, body.is-locked .sidebar__add, body.is-locked .sidebar__income, body.is-locked .sidebar__logout { display: none; }
 
 /* ---------- онбординг ---------- */
 .view--onboarding { justify-content: center; min-height: calc(100dvh - 64px); }
@@ -431,7 +433,7 @@ body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.
   .view { gap: 16px; }
   .view__head { padding: 0 0 4px; }
   .view__date { font-size: 28px; line-height: 34px; }
-  .tabbar, .fab, .logout-btn { display: none; }
+  .tabbar, .fab-row, .logout-btn { display: none; }
   .card { padding: 20px; }
   .stats { padding: 0; }
   .stat { padding: 14px 20px; }

@@ -328,7 +328,10 @@ const Engine = (() => {
       const nextCycleObs = p.nextIncomeDate && nextAfter
         ? s.obligations.filter(o => o.status === 'ACTIVE' && o.dueDate >= p.nextIncomeDate && o.dueDate < nextAfter).reduce((a, o) => a + o.amount, 0)
         : 0;
-      return { start, days: Math.max(1, dates.daysBetween(start, today) + 1), spent,
+      const income = s.transactions
+        .filter(t => t.type === 'INCOME' && t.date >= start && t.date <= today)
+        .reduce((a, t) => a + t.amount, 0);
+      return { start, days: Math.max(1, dates.daysBetween(start, today) + 1), spent, income,
         planned: Number.isInteger(p.cycleStartFree) ? p.cycleStartFree : null,
         leftover: calc.forecast(s, today).free - nextCycleObs };
     },

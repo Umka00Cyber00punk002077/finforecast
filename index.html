@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F8FAFC">
-<meta name="app-version" content="20260919135152">
+<meta name="app-version" content="20260919140032">
 <meta name="description" content="Сколько можно потратить сегодня и хватит ли до зарплаты">
 <title>Финансовый Прогноз</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230F172A%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2716%27 fill=%27%2310B981%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%277%27 fill=%27%230F172A%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260919135152">
+<link rel="stylesheet" href="styles.css?v=20260919140032">
 </head>
 <body>
 
@@ -55,6 +55,9 @@
     </nav>
     <button id="sidebar-add" class="btn btn--primary sidebar__add" type="button">
       <svg class="icon"><use href="#i-plus"/></svg><span>Записать трату</span><kbd title="Горячая клавиша">N</kbd>
+    </button>
+    <button id="sidebar-income" class="btn btn--ghost sidebar__income" type="button">
+      <svg class="icon"><use href="#i-arrow-in"/></svg><span>Внести доход</span>
     </button>
     <button id="sidebar-logout" class="btn btn--ghost sidebar__logout" type="button" hidden>
       <svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span>
@@ -144,6 +147,10 @@
           <section class="card list-card" aria-labelledby="h-dash-tx">
             <header class="list-card__head"><h2 id="h-dash-tx">Операции за сегодня</h2><a class="link" href="#" data-tab="history">История</a></header>
             <div id="dash-recent" class="list"></div>
+            <div class="btn-row">
+              <button id="dash-add-expense" class="btn btn--small btn--ghost" type="button"><svg class="icon"><use href="#i-plus"/></svg><span>Записать трату</span></button>
+              <button id="dash-add-income" class="btn btn--small btn--ghost" type="button"><svg class="icon"><use href="#i-arrow-in"/></svg><span>Внести доход</span></button>
+            </div>
           </section>
         </div>
       </div>
@@ -347,7 +354,10 @@
     <button class="tab-item" type="button" data-tab="obligations"><svg class="icon"><use href="#i-repeat"/></svg><span>Платежи</span></button>
     <button class="tab-item" type="button" data-tab="settings"><svg class="icon"><use href="#i-settings"/></svg><span>Настройки</span></button>
   </nav>
-  <button id="fab" class="fab" type="button" aria-label="Записать трату"><svg class="icon"><use href="#i-plus"/></svg><span>Трата</span></button>
+  <div class="fab-row">
+    <button id="fab-income" class="fab fab--secondary" type="button" aria-label="Внести доход"><svg class="icon"><use href="#i-arrow-in"/></svg><span>Доход</span></button>
+    <button id="fab" class="fab" type="button" aria-label="Записать трату"><svg class="icon"><use href="#i-plus"/></svg><span>Трата</span></button>
+  </div>
 </div>
 
 <!-- Трата / доход -->
@@ -528,7 +538,7 @@
   <button id="toast-undo" type="button" hidden>Отменить</button>
 </div>
 
-<script src="engine.js?v=20260919135152"></script>
-<script src="app.js?v=20260919135152"></script>
+<script src="engine.js?v=20260919140032"></script>
+<script src="app.js?v=20260919140032"></script>
 </body>
 </html>
