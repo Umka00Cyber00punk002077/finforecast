@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F6F4EF">
-<meta name="app-version" content="20260919143026">
+<meta name="app-version" content="20260919150742">
 <meta name="description" content="Сколько можно потратить сегодня и хватит ли до зарплаты">
 <title>Финансовый Прогноз</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2718%27 fill=%27%23151A24%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2717%27 fill=%27none%27 stroke=%27%2312A66F%27 stroke-width=%278%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%275%27 fill=%27%23F6F4EF%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260919143026">
+<link rel="stylesheet" href="styles.css?v=20260919150742">
 </head>
 <body>
 
@@ -274,17 +274,42 @@
       </section>
 
       <section class="card form" aria-labelledby="h-data">
-        <h2 id="h-data">Данные</h2>
+        <h2 id="h-data">Копия данных</h2>
         <p class="hint">Данные хранятся только в этом браузере. Чтобы перенести на другое устройство — сохраните копию и восстановите её там.</p>
         <div class="btn-row">
           <button id="btn-export" class="btn btn--ghost" type="button"><svg class="icon"><use href="#i-download"/></svg><span>Сохранить копию</span></button>
           <button id="btn-import" class="btn btn--ghost" type="button"><svg class="icon"><use href="#i-upload"/></svg><span>Восстановить из копии</span></button>
           <input id="file-import" type="file" accept=".json,application/json" hidden>
         </div>
-        <div class="btn-row">
-          <button id="btn-demo" class="btn btn--ghost" type="button">Показать на примере</button>
-          <button id="btn-rerun" class="btn btn--ghost" type="button">Пройти настройку заново</button>
-          <button id="btn-reset" class="btn btn--danger" type="button">Удалить все данные</button>
+      </section>
+
+      <section class="card list-card" aria-labelledby="h-restart">
+        <div class="list-card__head"><h2 id="h-restart">Начать заново</h2></div>
+        <div class="actions">
+          <button id="btn-rerun" class="action" type="button">
+            <span class="row__icon"><svg class="icon"><use href="#i-edit"/></svg></span>
+            <span class="action__body">
+              <span class="action__title">Настроить заново</span>
+              <span class="action__sub">Заново указать баланс, дату зарплаты и валюту. История трат, платежи и цели останутся.</span>
+            </span>
+            <svg class="icon action__chevron"><use href="#i-chevron-right"/></svg>
+          </button>
+          <button id="btn-demo" class="action" type="button">
+            <span class="row__icon"><svg class="icon"><use href="#i-sparkle"/></svg></span>
+            <span class="action__body">
+              <span class="action__title">Показать на примере</span>
+              <span class="action__sub">Заменит ваши записи демонстрационными. Если они нужны — сначала сохраните копию.</span>
+            </span>
+            <svg class="icon action__chevron"><use href="#i-chevron-right"/></svg>
+          </button>
+          <button id="btn-reset" class="action action--danger" type="button">
+            <span class="row__icon"><svg class="icon"><use href="#i-trash"/></svg></span>
+            <span class="action__body">
+              <span class="action__title">Удалить всё и начать с нуля</span>
+              <span class="action__sub">Сотрёт записи, платежи, цели и PIN на этом устройстве. Насовсем.</span>
+            </span>
+            <svg class="icon action__chevron"><use href="#i-chevron-right"/></svg>
+          </button>
         </div>
       </section>
     </section>
@@ -294,12 +319,13 @@
       <div class="onb card">
         <div class="onb__head">
           <span id="onb-counter" class="label-caps">Шаг 1 из 4</span>
-          <span class="brand__name">Финансовый Прогноз</span>
+          <span id="onb-brand" class="brand__name">Финансовый Прогноз</span>
+          <button id="onb-cancel" class="link" type="button" hidden>Отмена</button>
         </div>
 
         <div id="onb-step-1" class="onb__step">
           <h2 id="h-onb">Скажу, сколько можно тратить сегодня, чтобы хватило до зарплаты</h2>
-          <p class="onb__text">Три вопроса — и на экране будет одна цифра на день. Сначала валюта:</p>
+          <p id="onb-intro" class="onb__text">Три вопроса — и на экране будет одна цифра на день. Сначала валюта:</p>
           <div id="onb-currency" class="onb__grid">
             <button type="button" class="tile" data-currency="KGS"><b>сом</b><span>KGS</span></button>
             <button type="button" class="tile" data-currency="RUB"><b>₽</b><span>RUB</span></button>
@@ -356,7 +382,7 @@
             <li><b>Остальное делится на дни до зарплаты</b> — это ваша цифра на сегодня.</li>
             <li><b>Вечером — одна цифра:</b> сколько потратили. Каждую мелочь записывать не нужно.</li>
           </ol>
-          <p class="onb__text">Добавьте обязательные платежи (аренда, кредит, связь) — без них цифра на день завышена.</p>
+          <p id="onb-outro" class="onb__text">Добавьте обязательные платежи (аренда, кредит, связь) — без них цифра на день завышена.</p>
           <div class="onb__actions onb__actions--stack">
             <button id="onb-to-obligations" class="btn btn--primary" type="button">Добавить платёж</button>
             <button id="onb-finish" class="btn btn--ghost" type="button">На главную</button>
@@ -557,7 +583,7 @@
   <button id="toast-undo" type="button" hidden>Отменить</button>
 </div>
 
-<script src="engine.js?v=20260919143026"></script>
-<script src="app.js?v=20260919143026"></script>
+<script src="engine.js?v=20260919150742"></script>
+<script src="app.js?v=20260919150742"></script>
 </body>
 </html>

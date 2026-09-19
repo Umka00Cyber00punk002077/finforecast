@@ -194,6 +194,8 @@
     const open = $$('dialog').filter(d => d.open);
     if (open.length) { navBusy = true; for (const d of open) d.close(); navBusy = false; }
     if (st.onb && !store.state.profile.onboarded) { onb.step = st.onb; render(); return; }
+    if (onb.rerun && !st.onb) { cancelRerun({ fromHistory: true }); return; }
+    if (st.onb && store.state.profile.onboarded) { try { history.back(); } catch (_) { /* file:// */ } return; } // старые шаги настройки — пропускаем
     if (st.tab && store.state.profile.onboarded && Engine.TABS.includes(st.tab) && st.tab !== store.state.ui.tab) showTab(st.tab, { push: false });
   });
   document.addEventListener('click', (e) => {
@@ -603,10 +605,20 @@
   }
 
   // ---------- онбординг ----------
-  const onb = { step: 1, currency: 'KGS' };
+  const onb = { step: 1, currency: 'KGS', rerun: false }; // rerun — «Настроить заново» из настроек: записи остаются
   function renderOnboarding() {
     for (let i = 1; i <= 4; i++) $('#onb-step-' + i).hidden = i !== onb.step;
     $('#onb-counter').textContent = `Шаг ${onb.step} из 4`;
+    $('#onb-brand').hidden = onb.rerun;
+    $('#onb-cancel').hidden = !onb.rerun;
+    $('#onb-demo').hidden = onb.rerun;
+    $('#h-onb').textContent = onb.rerun ? 'Настроим заново' : 'Скажу, сколько можно тратить сегодня, чтобы хватило до зарплаты';
+    $('#onb-intro').textContent = onb.rerun ? 'История трат, платежи и цели останутся — обновим только баланс, дату зарплаты и валюту. Сначала валюта:'
+      : 'Три вопроса — и на экране будет одна цифра на день. Сначала валюта:';
+    $('#onb-outro').textContent = onb.rerun ? 'Платежи и цели на месте — цифра на день уже учитывает их.'
+      : 'Добавьте обязательные платежи (аренда, кредит, связь) — без них цифра на день завышена.';
+    $('#onb-to-obligations').hidden = onb.rerun;
+    $('#onb-finish').className = 'btn ' + (onb.rerun ? 'btn--primary' : 'btn--ghost');
     for (const b of $$('#onb-currency [data-currency]')) b.classList.toggle('is-active', b.dataset.currency === onb.currency);
     for (const c of $$('.cur')) c.textContent = Engine.money.CURRENCIES[onb.currency];
     if (onb.step === 3) $('#onb-date').min = Engine.dates.addDays(today(), 1);
@@ -618,7 +630,7 @@
   $('#onb-currency').addEventListener('click', (e) => { const b = e.target.closest('[data-currency]'); if (!b) return; onb.currency = b.dataset.currency; renderOnboarding(); });
   function onbGo(step) { onb.step = step; render(); try { history.pushState({ onb: step }, ''); } catch (_) { /* file:// */ } }
   $('#onb-next-1').addEventListener('click', () => { onbGo(2); $('#onb-balance').focus(); });
-  $('#onb-demo').addEventListener('click', () => { store.commit(Engine.demoState(today())); toast('Это пример. Начать заново: Настройки → Удалить все данные'); });
+  $('#onb-demo').addEventListener('click', () => { store.commit(Engine.demoState(today())); toast('Это пример. Убрать его: Настройки → Начать заново'); });
   $('#onb-next-2').addEventListener('click', () => {
     if (!validate($('#onb-balance'), Engine.money.parse, 'Введите сумму больше нуля')) return;
     onbGo(3); $('#onb-date').focus();
@@ -641,7 +653,7 @@
   });
   function finishOnboarding(tab) {
     store.state.profile.onboarded = true;
-    onb.step = 1;
+    onb.step = 1; onb.rerun = false;
     store.commit(Engine.ops.setTab(store.state, tab));
     window.scrollTo(0, 0);
     try { history.replaceState({ tab, level: 0 }, '', '#' + tab); } catch (_) { /* file:// */ }
@@ -1221,17 +1233,35 @@
     }
   });
   $('#btn-demo').addEventListener('click', async () => {
-    if (await confirmDialog('Заменить все данные примером?', { ok: 'Показать пример' })) {
-      store.commit(Engine.demoState(today())); showTab('dashboard'); toast('Это пример. Свои данные: Настройки → Удалить все данные');
+    if (await confirmDialog('Показать пример вместо ваших данных? Ваши записи будут стёрты — если они нужны, сначала сохраните копию.', { ok: 'Показать пример' })) {
+      store.commit(Engine.demoState(today())); showTab('dashboard'); toast('Это пример. Убрать его: Настройки → Начать заново');
     }
   });
+  // «Настроить заново»: те же четыре шага с текущими значениями; пока не дошли до конца, ничего не сохраняется
   $('#btn-rerun').addEventListener('click', () => {
-    onb.step = 1; onb.currency = store.state.profile.currency;
-    store.state.profile.onboarded = false; // без сохранения: перезагрузка вернёт прежнее состояние
+    const s = store.state, p = s.profile, f = Engine.calc.forecast(s, today());
+    onb.step = 1; onb.currency = p.currency; onb.rerun = true;
+    $('#onb-balance').value = toInput(f.balance);
+    $('#onb-date').value = p.nextIncomeDate || '';
+    $('#onb-expected').value = toInput(p.expectedIncome);
+    $('#onb-frequency').value = p.incomeFrequency;
+    s.profile.onboarded = false; // без сохранения: перезагрузка или «Отмена» вернут прежнее состояние
     render(); window.scrollTo(0, 0);
+    try { history.pushState({ onb: 1 }, ''); } catch (_) { /* file:// */ }
   });
+  function cancelRerun({ fromHistory = false } = {}) {
+    const steps = onb.step;
+    onb.rerun = false; onb.step = 1;
+    store.load(); // на шаге 4 изменения уже в памяти, но не сохранены — возвращаем сохранённое
+    store.state.profile.onboarded = true;
+    store.commit(Engine.ops.setTab(store.state, 'settings'));
+    window.scrollTo(0, 0);
+    toast('Настройки не изменились');
+    if (!fromHistory) { try { history.go(-steps); } catch (_) { /* file:// */ } }
+  }
+  $('#onb-cancel').addEventListener('click', () => cancelRerun());
   $('#btn-reset').addEventListener('click', async () => {
-    if (await confirmDialog('Удалить все данные без возможности восстановления?')) { store.clear(); toast('Данные удалены'); }
+    if (await confirmDialog('Удалить всё? Записи, платежи, цели и PIN на этом устройстве исчезнут насовсем. Сохранённая копия, если она есть, останется.', { ok: 'Удалить всё' })) { store.clear(); toast('Данные удалены'); }
   });
 
   // ---------- горячие клавиши ----------

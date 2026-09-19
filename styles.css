@@ -358,6 +358,20 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 36px;
 .details[open] summary { margin-bottom: 8px; }
 #ob-list.list:empty { display: block; }
 
+/* ---------- «Начать заново»: строки-кнопки с пояснением ---------- */
+.actions { display: flex; flex-direction: column; }
+.action { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 4px; margin: 0; border: 0; border-top: 1px solid var(--line-soft); border-radius: 12px; background: none; color: var(--ink); text-align: left; transition: background .15s; }
+.action:first-child { border-top: 0; }
+.action:hover { background: var(--surface-2); }
+.action:active { background: var(--line-soft); }
+.action__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.action__title { font-weight: 700; font-size: 15px; line-height: 20px; }
+.action__sub { font-size: 13px; line-height: 17px; color: var(--ink-2); }
+.action__chevron { width: 18px; height: 18px; color: var(--ink-2); }
+.action--danger .action__title { color: var(--bad-ink); }
+.action--danger .row__icon { background: var(--bad-bg); color: var(--bad-ink); }
+.action--danger:hover { background: var(--bad-bg); }
+
 /* ---------- первые шаги ---------- */
 .steps__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
 .step { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line-soft); }
