@@ -330,6 +330,9 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 36px;
 .field--pin { font-size: 24px; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
 .sidebar__logout { justify-content: flex-start; }
 .lock__forgot { align-self: center; white-space: normal; text-align: center; color: var(--ink-2); min-height: var(--tap); }
+.lock__hint { text-align: center; }
+.view__tools { display: flex; align-items: center; gap: 6px; }
+.dash__logout { width: 40px; min-height: 40px; }
 body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.is-locked .sidebar__add, body.is-locked .sidebar__logout { display: none; }
 
 /* ---------- онбординг ---------- */
@@ -415,7 +418,7 @@ body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.
   .view { gap: 16px; }
   .view__head { padding: 0 0 4px; }
   .view__date { font-size: 28px; line-height: 34px; }
-  .tabbar, .fab { display: none; }
+  .tabbar, .fab, .dash__logout { display: none; }
   .card { padding: 20px; }
   .stats { padding: 0; }
   .stat { padding: 14px 20px; }
