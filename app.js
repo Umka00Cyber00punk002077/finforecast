@@ -144,10 +144,23 @@
   }
   // Системная кнопка «Назад» (телефон, браузер): вкладки, шторки и шаги настройки — в истории браузера
   let navBusy = false;
+  // История браузера держится плоской: [главная] → [раздел] → [шторка].
+  // Системная «Назад»: закрыть шторку → вернуться на главную → выйти из приложения.
   function showTab(tab, { push = true } = {}) {
     store.commit(Engine.ops.setTab(store.state, tab));
     window.scrollTo(0, 0);
-    if (push) { try { history.pushState({ tab }, '', '#' + tab); } catch (_) { /* file:// */ } }
+    if (!push) return;
+    try {
+      const st = history.state || {};
+      if (tab === 'dashboard') {
+        if (st.level === 1) history.back();
+        else history.replaceState({ tab: 'dashboard', level: 0 }, '', '#dashboard');
+      } else if (st.level === 1) {
+        history.replaceState({ tab, level: 1 }, '', '#' + tab);
+      } else {
+        history.pushState({ tab, level: 1 }, '', '#' + tab);
+      }
+    } catch (_) { /* file:// */ }
   }
   window.addEventListener('popstate', (e) => {
     const st = e.state || {};
@@ -566,7 +579,7 @@
     onb.step = 1;
     store.commit(Engine.ops.setTab(store.state, tab));
     window.scrollTo(0, 0);
-    try { history.replaceState({ tab }, '', '#' + tab); } catch (_) { /* file:// */ }
+    try { history.replaceState({ tab, level: 0 }, '', '#' + tab); } catch (_) { /* file:// */ }
   }
   $('#onb-finish').addEventListener('click', () => { finishOnboarding('dashboard'); toast('Готово. Вечером спрошу, сколько потратили'); });
   $('#onb-to-obligations').addEventListener('click', () => { finishOnboarding('obligations'); openObDialog(null); });
@@ -843,9 +856,10 @@
   });
 
   // ---------- диалог подтверждения ----------
-  function confirmDialog(text, { ok = 'Удалить', danger = true } = {}) {
+  function confirmDialog(text, { ok = 'Удалить', danger = true, cancel = 'Отмена' } = {}) {
     const dlg = $('#dlg-confirm');
     $('#confirm-text').textContent = text;
+    $('#confirm-cancel').textContent = cancel;
     const okBtn = $('#confirm-ok');
     okBtn.textContent = ok;
     okBtn.className = 'btn ' + (danger ? 'btn--danger' : 'btn--primary');
@@ -952,12 +966,22 @@
   const validPin = (v) => /^\d{4,6}$/.test(v);
   // Полный выход: заблокировать, убрать данные с экрана и уйти на страницу «Вы вышли».
   // При следующем открытии приложения — вход кнопкой или PIN-кодом.
-  function logout() {
+  async function logout() {
+    const p = store.state.profile;
+    if (!p.pinHash && !p.pinOffered) {
+      const want = await confirmDialog('Задать PIN-код? Тогда после выхода никто не откроет приложение без кода. Спрашиваю один раз.', { ok: 'Задать PIN', danger: false, cancel: 'Выйти без PIN' });
+      store.state = Engine.ops.setProfile(store.state, { pinOffered: true }); store.save();
+      if (want) { pinDlg.thenLogout = true; openPinDialog('set'); return; }
+    }
+    finishLogout();
+  }
+  function finishLogout() {
     setUnlocked(false);
     try { localStorage.setItem(KEY, JSON.stringify(store.state)); } catch (_) { /* уже сохранено */ }
-    for (const d of $$('dialog')) if (d.open) d.close();
+    navBusy = true; for (const d of $$('dialog')) if (d.open) d.close(); navBusy = false;
     clearRendered();
-    try { location.href = 'exit.html'; } catch (_) { render(); window.scrollTo(0, 0); }
+    // небольшая пауза: даём закрыться диалогу подтверждения, чтобы переход не отменился откатом истории
+    setTimeout(() => { try { location.href = 'exit.html'; } catch (_) { render(); window.scrollTo(0, 0); } }, 250);
   }
   // Очистить всё, что было нарисовано из данных пользователя (на случай, если страница останется открытой)
   function clearRendered() {
@@ -996,7 +1020,7 @@
   $('#lock-forgot').addEventListener('click', async () => {
     if (await confirmDialog('PIN восстановить нельзя. Удалить все данные и начать заново?', { ok: 'Удалить данные' })) { setUnlocked(false); store.clear(); toast('Данные удалены'); }
   });
-  const pinDlg = { mode: 'set' };
+  const pinDlg = { mode: 'set', thenLogout: false };
   function openPinDialog(mode) {
     pinDlg.mode = mode;
     const hasPin = !!store.state.profile.pinHash;
@@ -1031,6 +1055,7 @@
     setUnlocked(true); // до commit: иначе render покажет экран входа
     store.commit(Engine.ops.setPin(store.state, hash, salt));
     closeDialog($('#dlg-pin'));
+    if (pinDlg.thenLogout) { pinDlg.thenLogout = false; finishLogout(); return; }
     toast(pinDlg.mode === 'change' ? 'PIN-код изменён' : 'PIN-код задан: теперь вход по коду');
   });
   function renderSecurity() {
@@ -1181,6 +1206,6 @@
   store.load();
   const hashTab = location.hash.replace('#', '');
   if (store.state.profile.onboarded && Engine.TABS.includes(hashTab) && hashTab !== store.state.ui.tab) store.state = Engine.ops.setTab(store.state, hashTab);
-  try { history.replaceState(store.state.profile.onboarded ? { tab: store.state.ui.tab } : { onb: 1 }, '', store.state.profile.onboarded ? '#' + store.state.ui.tab : location.pathname + location.search); } catch (_) { /* file:// */ }
+  try { history.replaceState(store.state.profile.onboarded ? { tab: store.state.ui.tab, level: 0 } : { onb: 1 }, '', store.state.profile.onboarded ? '#' + store.state.ui.tab : location.pathname + location.search); } catch (_) { /* file:// */ }
   render();
 })();
