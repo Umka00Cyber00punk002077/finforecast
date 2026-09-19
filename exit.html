@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8FAFC">
+<meta name="robots" content="noindex">
+<title>Вы вышли — Финансовый Прогноз</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230F172A%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2716%27 fill=%27%2310B981%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%277%27 fill=%27%230F172A%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #F8FAFC; --surface: #FFFFFF; --ink: #0F172A; --ink-2: #64748B; --ink-3: #475569; --line: #E2E8F0; --line-soft: #EEF2F7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--ink); font: 400 15px/1.5 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .mark { width: 48px; height: 48px; border-radius: 14px; background: var(--line-soft); display: grid; place-items: center; }
+  .mark svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -.01em; }
+  p { margin: 0; color: var(--ink-3); }
+  .hint { font-size: 13px; color: var(--ink-2); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer; }
+  .btn--primary { background: var(--ink); color: #fff; }
+  .btn--ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn--ghost:hover { background: var(--bg); }
+  .brand { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+</style>
+</head>
+<body>
+  <main class="card" aria-labelledby="h">
+    <span class="brand">Финансовый Прогноз</span>
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+    <h1 id="h">Вы вышли</h1>
+    <p>Приложение закрыто. Ваши записи остались на этом устройстве — при входе всё будет на месте.</p>
+    <a class="btn btn--primary" href="./">Войти снова</a>
+    <button class="btn btn--ghost" type="button" id="close">Закрыть вкладку</button>
+    <p class="hint" id="close-hint" hidden>Браузер не даёт закрыть эту вкладку скриптом — закройте её обычным способом.</p>
+  </main>
+  <script>
+    document.getElementById('close').addEventListener('click', function () {
+      window.close();
+      setTimeout(function () { document.getElementById('close-hint').hidden = false; }, 300);
+    });
+  </script>
+</body>
+</html>

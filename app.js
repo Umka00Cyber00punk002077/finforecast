@@ -123,6 +123,7 @@
       for (const v of $$('.view')) v.hidden = v.id !== 'view-lock';
       $('#fab').hidden = true;
       $('#corrupt-banner').hidden = true;
+      clearRendered();
       renderLock();
       return;
     }
@@ -947,13 +948,22 @@
     return 'fnv:' + h.toString(16);
   }
   const validPin = (v) => /^\d{4,6}$/.test(v);
-  // Полный выход: закрыть приложение и уйти с сайта. Вкладку, открытую вручную, браузер закрыть
-  // скриптом не даст — тогда заменяем страницу пустой; при следующем открытии — экран «Войти».
+  // Полный выход: заблокировать, убрать данные с экрана и уйти на страницу «Вы вышли».
+  // При следующем открытии приложения — вход кнопкой или PIN-кодом.
   function logout() {
     setUnlocked(false);
     try { localStorage.setItem(KEY, JSON.stringify(store.state)); } catch (_) { /* уже сохранено */ }
-    try { window.close(); } catch (_) { /* не разрешено */ }
-    setTimeout(() => { try { location.replace('about:blank'); } catch (_) { render(); window.scrollTo(0, 0); } }, 150);
+    for (const d of $$('dialog')) if (d.open) d.close();
+    clearRendered();
+    try { location.href = 'exit.html'; } catch (_) { render(); window.scrollTo(0, 0); }
+  }
+  // Очистить всё, что было нарисовано из данных пользователя (на случай, если страница останется открытой)
+  function clearRendered() {
+    for (const id of ['hero', 'stats', 'dash-obligations', 'dash-goals', 'dash-recent', 'steps-list', 'afford-lines', 'history-list', 'ob-list', 'ob-done-list', 'goal-list', 'goal-done-list', 'security-actions', 'info-lines']) {
+      const n = document.getElementById(id); if (n) n.replaceChildren();
+    }
+    $('#afford-amount').value = ''; $('#afford-result').hidden = true; affordAmount = null;
+    $('#settings-balance').textContent = ''; $('#dash-streak').hidden = true;
   }
   $('#sidebar-logout').addEventListener('click', logout);
   $('#dash-logout').addEventListener('click', logout);
@@ -1024,8 +1034,8 @@
   function renderSecurity() {
     const hasPin = !!store.state.profile.pinHash;
     $('#security-text').textContent = hasPin
-      ? 'PIN-код включён: приложение спрашивает код при каждом открытии. «Выйти» закрывает вкладку с сайтом.'
-      : '«Выйти» закрывает вкладку с сайтом; при следующем открытии — кнопка «Войти». Чтобы вход был по коду, задайте PIN.';
+      ? 'PIN-код включён: приложение спрашивает код при каждом открытии. «Выйти» закрывает приложение до следующего ввода кода.'
+      : '«Выйти» закрывает приложение; при следующем открытии — кнопка «Войти». Чтобы вход был по коду, задайте PIN.';
     $('#security-actions').replaceChildren(...(hasPin
       ? [el('button', { type: 'button', class: 'btn btn--primary', onclick: logout }, [icon('logout'), el('span', { text: 'Выйти' })]),
          el('button', { type: 'button', class: 'btn btn--ghost', text: 'Изменить PIN', onclick: () => openPinDialog('change') }),
