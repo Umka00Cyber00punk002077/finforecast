@@ -947,7 +947,14 @@
     return 'fnv:' + h.toString(16);
   }
   const validPin = (v) => /^\d{4,6}$/.test(v);
-  function logout() { setUnlocked(false); render(); window.scrollTo(0, 0); }
+  // Полный выход: закрыть приложение и уйти с сайта. Вкладку, открытую вручную, браузер закрыть
+  // скриптом не даст — тогда заменяем страницу пустой; при следующем открытии — экран «Войти».
+  function logout() {
+    setUnlocked(false);
+    try { localStorage.setItem(KEY, JSON.stringify(store.state)); } catch (_) { /* уже сохранено */ }
+    try { window.close(); } catch (_) { /* не разрешено */ }
+    setTimeout(() => { try { location.replace('about:blank'); } catch (_) { render(); window.scrollTo(0, 0); } }, 150);
+  }
   $('#sidebar-logout').addEventListener('click', logout);
   $('#dash-logout').addEventListener('click', logout);
   function renderLock() {
@@ -1017,8 +1024,8 @@
   function renderSecurity() {
     const hasPin = !!store.state.profile.pinHash;
     $('#security-text').textContent = hasPin
-      ? 'PIN-код включён: приложение спрашивает код при открытии. «Выйти» закрывает его до следующего ввода кода.'
-      : '«Выйти» закрывает сайт стартовым экраном, но войти обратно можно одним нажатием. Чтобы вход был по коду, задайте PIN.';
+      ? 'PIN-код включён: приложение спрашивает код при каждом открытии. «Выйти» закрывает вкладку с сайтом.'
+      : '«Выйти» закрывает вкладку с сайтом; при следующем открытии — кнопка «Войти». Чтобы вход был по коду, задайте PIN.';
     $('#security-actions').replaceChildren(...(hasPin
       ? [el('button', { type: 'button', class: 'btn btn--primary', onclick: logout }, [icon('logout'), el('span', { text: 'Выйти' })]),
          el('button', { type: 'button', class: 'btn btn--ghost', text: 'Изменить PIN', onclick: () => openPinDialog('change') }),
