@@ -323,6 +323,15 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 36px;
 .how { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
 .how b { color: var(--ink); }
 
+/* ---------- вход по PIN ---------- */
+.lock { align-items: stretch; }
+.lock__mark { width: 48px; height: 48px; border-radius: 14px; background: var(--line-soft); color: var(--ink); display: grid; place-items: center; }
+.lock__mark .icon { width: 24px; height: 24px; }
+.field--pin { font-size: 24px; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
+.sidebar__logout { justify-content: flex-start; }
+.lock__forgot { align-self: center; white-space: normal; text-align: center; color: var(--ink-2); min-height: var(--tap); }
+body.is-locked .tabbar, body.is-locked .fab, body.is-locked .sidebar__nav, body.is-locked .sidebar__add, body.is-locked .sidebar__logout { display: none; }
+
 /* ---------- онбординг ---------- */
 .view--onboarding { justify-content: center; min-height: calc(100dvh - 64px); }
 .onb { display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; width: 100%; max-width: 480px; margin: 0 auto; }

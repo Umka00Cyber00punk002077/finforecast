@@ -39,7 +39,7 @@
     },
     clear() {
       try { localStorage.removeItem(KEY); } catch (_) { /* нечего делать */ }
-      this.state = Engine.defaultState(); this.corrupt = false; render();
+      this.state = Engine.defaultState(); this.corrupt = false; setUnlocked(false); render();
     },
   };
   function milestones(s) {
@@ -117,9 +117,19 @@
   function render() {
     renderedToday = today();
     const s = store.state;
+    const locked = isLocked();
+    document.body.classList.toggle('is-locked', locked);
+    if (locked) {
+      for (const v of $$('.view')) v.hidden = v.id !== 'view-lock';
+      $('#fab').hidden = true;
+      $('#corrupt-banner').hidden = true;
+      setTimeout(() => $('#lock-pin').focus(), 60);
+      return;
+    }
     const onboarding = !s.profile.onboarded;
     const tab = onboarding ? 'onboarding' : s.ui.tab;
     for (const v of $$('.view')) v.hidden = v.id !== 'view-' + tab;
+    $('#sidebar-logout').hidden = !s.profile.pinHash || onboarding;
     for (const n of $$('.nav-item, .tab-item')) {
       if (n.dataset.tab === tab) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
     }
@@ -891,8 +901,94 @@
     $('#goal-done-list').replaceChildren(...doneGoals.map(g => goalCard(g)));
   }
 
+  // ---------- PIN и выход ----------
+  const UNLOCK_KEY = 'finforecast.unlocked';
+  function isLocked() {
+    if (!store.state.profile.pinHash) return false;
+    try { return sessionStorage.getItem(UNLOCK_KEY) !== '1'; } catch (_) { return false; }
+  }
+  function setUnlocked(v) { try { if (v) sessionStorage.setItem(UNLOCK_KEY, '1'); else sessionStorage.removeItem(UNLOCK_KEY); } catch (_) { /* приватный режим */ } }
+  async function hashPin(pin, salt) {
+    const data = new TextEncoder().encode(`${salt}:${pin}`);
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      try { const buf = await crypto.subtle.digest('SHA-256', data); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+      catch (_) { /* небезопасный контекст — запасной вариант ниже */ }
+    }
+    let h = 2166136261;
+    for (const b of data) { h ^= b; h = Math.imul(h, 16777619) >>> 0; }
+    return 'fnv:' + h.toString(16);
+  }
+  const validPin = (v) => /^\d{4,6}$/.test(v);
+  function logout() { setUnlocked(false); render(); window.scrollTo(0, 0); }
+  $('#sidebar-logout').addEventListener('click', logout);
+  $('#lock-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('#lock-pin');
+    const pin = input.value.trim();
+    if (!validPin(pin)) return setError(input, 'PIN — от 4 до 6 цифр');
+    const p = store.state.profile;
+    const h = await hashPin(pin, p.pinSalt || '');
+    if (h !== p.pinHash) { input.value = ''; return setError(input, 'Неверный PIN'); }
+    input.value = '';
+    setUnlocked(true);
+    render();
+  });
+  $('#lock-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#lock-form').requestSubmit(); } });
+  $('#lock-forgot').addEventListener('click', async () => {
+    if (await confirmDialog('PIN восстановить нельзя. Удалить все данные и начать заново?', { ok: 'Удалить данные' })) { setUnlocked(false); store.clear(); toast('Данные удалены'); }
+  });
+  const pinDlg = { mode: 'set' };
+  function openPinDialog(mode) {
+    pinDlg.mode = mode;
+    const hasPin = !!store.state.profile.pinHash;
+    $('#pin-title').textContent = mode === 'remove' ? 'Убрать PIN-код' : mode === 'change' ? 'Изменить PIN-код' : 'Задать PIN-код';
+    $('#pin-sub').textContent = mode === 'remove' ? 'После этого приложение будет открываться без кода.'
+      : 'Код спросят при каждом новом открытии приложения и после «Выйти». Восстановить забытый PIN нельзя — только удалить данные.';
+    $('#pin-current-wrap').hidden = !hasPin;
+    $('#pin-new-wrap').hidden = mode === 'remove';
+    $('#pin-repeat-wrap').hidden = mode === 'remove';
+    $('#pin-submit').textContent = mode === 'remove' ? 'Убрать PIN' : 'Сохранить';
+    for (const id of ['pin-current', 'pin-new', 'pin-repeat']) { $('#' + id).value = ''; clearError($('#' + id)); }
+    openDialog($('#dlg-pin'));
+  }
+  $('#dlg-pin form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const p = store.state.profile;
+    if (p.pinHash) {
+      const cur = $('#pin-current').value.trim();
+      if (!validPin(cur)) return setError($('#pin-current'), 'Введите текущий PIN');
+      if (await hashPin(cur, p.pinSalt || '') !== p.pinHash) return setError($('#pin-current'), 'Неверный PIN');
+    }
+    if (pinDlg.mode === 'remove') {
+      store.commit(Engine.ops.setPin(store.state, null));
+      closeDialog($('#dlg-pin')); toast('PIN-код убран');
+      return;
+    }
+    const pin = $('#pin-new').value.trim();
+    if (!validPin(pin)) return setError($('#pin-new'), 'PIN — от 4 до 6 цифр');
+    if ($('#pin-repeat').value.trim() !== pin) return setError($('#pin-repeat'), 'Коды не совпадают');
+    const salt = Engine.newId();
+    const hash = await hashPin(pin, salt);
+    setUnlocked(true); // до commit: иначе render покажет экран входа
+    store.commit(Engine.ops.setPin(store.state, hash, salt));
+    closeDialog($('#dlg-pin'));
+    toast(pinDlg.mode === 'change' ? 'PIN-код изменён' : 'PIN-код задан. Кнопка «Выйти» — в настройках');
+  });
+  function renderSecurity() {
+    const hasPin = !!store.state.profile.pinHash;
+    $('#security-text').textContent = hasPin
+      ? 'PIN-код включён: приложение спрашивает код при открытии. «Выйти» закрывает его до следующего ввода кода.'
+      : 'Без PIN-кода приложение открыто для всех, кто пользуется этим устройством. Задайте код — появится кнопка «Выйти».';
+    $('#security-actions').replaceChildren(...(hasPin
+      ? [el('button', { type: 'button', class: 'btn btn--primary', onclick: logout }, [icon('logout'), el('span', { text: 'Выйти' })]),
+         el('button', { type: 'button', class: 'btn btn--ghost', text: 'Изменить PIN', onclick: () => openPinDialog('change') }),
+         el('button', { type: 'button', class: 'btn btn--ghost', text: 'Убрать PIN', onclick: () => openPinDialog('remove') })]
+      : [el('button', { type: 'button', class: 'btn btn--primary', onclick: () => openPinDialog('set') }, [icon('lock'), el('span', { text: 'Задать PIN-код' })])]));
+  }
+
   // ---------- настройки ----------
   function renderSettings() {
+    renderSecurity();
     const s = store.state, p = s.profile, f = Engine.calc.forecast(s, today());
     const form = $('#settings-form');
     form.nextIncomeDate.value = p.nextIncomeDate || '';
@@ -992,7 +1088,7 @@
     if (e.key === 'Escape' && openDialogs.length) { e.preventDefault(); closeDialog(openDialogs[openDialogs.length - 1]); return; }
     const tag = document.activeElement ? document.activeElement.tagName : '';
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) || openDialogs.length > 0;
-    if (!typing && /^[nNтТ]$/.test(e.key) && store.state.profile.onboarded) { e.preventDefault(); openTxDialog({ mode: 'expense' }); }
+    if (!typing && /^[nNтТ]$/.test(e.key) && store.state.profile.onboarded && !isLocked()) { e.preventDefault(); openTxDialog({ mode: 'expense' }); }
   });
 
   // ---------- смена дня при открытой вкладке ----------

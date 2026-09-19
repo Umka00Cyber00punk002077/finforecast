@@ -96,7 +96,8 @@ const Engine = (() => {
   }
   function defaultProfile() {
     return { currency: 'KGS', initialBalance: 0, nextIncomeDate: '', incomeDay: 1, incomeFrequency: 'MONTHLY',
-      expectedIncome: null, safetyBuffer: 0, cycleStartDate: '', cycleStartFree: null, onboarded: false };
+      expectedIncome: null, safetyBuffer: 0, cycleStartDate: '', cycleStartFree: null, onboarded: false,
+      pinHash: null, pinSalt: null };
   }
   function defaultState() {
     return { version: 1, profile: defaultProfile(), transactions: [], obligations: [], goals: [], checkins: [], ui: { tab: 'dashboard' } };
@@ -585,6 +586,8 @@ const Engine = (() => {
       return n;
     },
     setTab(s, tab) { const n = clone(s); n.ui.tab = TABS.includes(tab) ? tab : 'dashboard'; return n; },
+    // PIN хранится как хеш с солью; null — защита выключена
+    setPin(s, hash, salt) { const n = clone(s); n.profile.pinHash = hash || null; n.profile.pinSalt = hash ? (salt || null) : null; return n; },
   };
 
   return { dates, money, calc, ops, CATEGORIES, SPECIAL, TABS, newId, defaultState, demoState, migrate };
