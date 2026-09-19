@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F8FAFC">
+<meta name="app-version" content="20260919134556">
 <meta name="description" content="Сколько можно потратить сегодня и хватит ли до зарплаты">
 <title>Финансовый Прогноз</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2716%27 fill=%27%230F172A%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2716%27 fill=%27%2310B981%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%277%27 fill=%27%230F172A%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260919134104">
+<link rel="stylesheet" href="styles.css?v=20260919134556">
 </head>
 <body>
 
@@ -89,7 +90,7 @@
           <h1 id="h-dashboard" class="view__date"></h1>
           <span id="dash-streak" class="streak" hidden></span>
         </div>
-        <button id="dash-logout" class="btn btn--small btn--ghost dash__logout" type="button" title="Закрыть приложение"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button>
+        <button class="btn btn--small btn--ghost logout-btn" type="button" title="Закрыть приложение"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button>
       </header>
       <div class="dash">
         <div class="dash__main">
@@ -150,7 +151,7 @@
 
     <!-- История -->
     <section id="view-history" class="view" aria-labelledby="h-history" hidden>
-      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-history">История</h1></div></header>
+      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-history">История</h1></div><button class="btn btn--small btn--ghost logout-btn" type="button" title="Закрыть приложение"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button></header>
       <div id="history-filter" class="segment segment--wide" role="group" aria-label="Фильтр">
         <button type="button" data-filter="all" class="is-active">Все</button>
         <button type="button" data-filter="expense">Траты</button>
@@ -167,7 +168,7 @@
           <h1 id="h-obligations">Платежи и цели</h1>
           <p class="hint">Эти деньги уже заняты и не входят в лимит на день. Сейчас отложено: <b id="ob-total" class="num"></b></p>
         </div>
-        <button id="ob-add" class="btn btn--primary view__action" type="button"><svg class="icon"><use href="#i-plus"/></svg><span>Платёж</span></button>
+        <div class="view__tools"><button id="ob-add" class="btn btn--primary view__action" type="button"><svg class="icon"><use href="#i-plus"/></svg><span>Платёж</span></button><button class="btn btn--small btn--ghost logout-btn" type="button" title="Закрыть приложение"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button></div>
       </header>
       <div id="ob-list" class="card list"></div>
       <details id="ob-done" class="card details" hidden>
@@ -191,7 +192,7 @@
 
     <!-- Настройки -->
     <section id="view-settings" class="view" aria-labelledby="h-settings" hidden>
-      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-settings">Настройки</h1></div></header>
+      <header class="view__head"><div><button class="back" type="button" data-tab="dashboard"><svg class="icon"><use href="#i-chevron-left"/></svg><span>Назад</span></button><h1 id="h-settings">Настройки</h1></div><button class="btn btn--small btn--ghost logout-btn" type="button" title="Закрыть приложение"><svg class="icon"><use href="#i-logout"/></svg><span>Выйти</span></button></header>
 
       <section class="card form" aria-labelledby="h-security">
         <h2 id="h-security">Защита и выход</h2>
@@ -527,7 +528,7 @@
   <button id="toast-undo" type="button" hidden>Отменить</button>
 </div>
 
-<script src="engine.js?v=20260919134104"></script>
-<script src="app.js?v=20260919134104"></script>
+<script src="engine.js?v=20260919134556"></script>
+<script src="app.js?v=20260919134556"></script>
 </body>
 </html>

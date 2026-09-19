@@ -88,16 +88,18 @@
 
   // ---------- тост с отменой; вехи целей подклеиваются к ближайшему тосту ----------
   let toastTimer = null, toastUndo = null, pendingMilestone = null, milestoneTimer = null;
-  function toast(text, { undo } = {}) {
+  function toast(text, { undo, action, sticky = false } = {}) {
     const t = $('#toast'), u = $('#toast-undo');
     let msg = text;
     if (pendingMilestone) { msg += ' · ' + pendingMilestone; pendingMilestone = null; clearTimeout(milestoneTimer); }
     $('#toast-text').textContent = msg;
-    toastUndo = undo || null; u.hidden = !undo;
+    toastUndo = action ? action.fn : (undo || null);
+    u.textContent = action ? action.label : 'Отменить';
+    u.hidden = !toastUndo;
     t.hidden = false;
     requestAnimationFrame(() => t.classList.add('is-visible'));
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(hideToast, 5000);
+    if (!sticky) toastTimer = setTimeout(hideToast, 5000);
   }
   function queueMilestone(text) {
     pendingMilestone = text;
@@ -966,7 +968,7 @@
     $('#settings-balance').textContent = ''; $('#dash-streak').hidden = true;
   }
   $('#sidebar-logout').addEventListener('click', logout);
-  $('#dash-logout').addEventListener('click', logout);
+  for (const b of $$('.logout-btn')) b.addEventListener('click', logout);
   function renderLock() {
     const hasPin = !!store.state.profile.pinHash;
     $('#h-lock').textContent = hasPin ? 'Введите PIN-код' : 'Вы вышли';
@@ -1148,6 +1150,27 @@
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) || openDialogs.length > 0;
     if (!typing && /^[nNтТ]$/.test(e.key) && store.state.profile.onboarded && !isLocked()) { e.preventDefault(); openTxDialog({ mode: 'expense' }); }
   });
+
+  // ---------- новая версия на сайте: обновиться самим, не дожидаясь кэша ----------
+  const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || 'dev';
+  let updateOffered = false;
+  async function checkForUpdate() {
+    if (APP_VERSION === 'dev' || updateOffered || location.protocol === 'file:') return;
+    let live = '';
+    try {
+      const r = await fetch('version.txt?ts=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      live = (await r.text()).trim();
+    } catch (_) { return; }
+    if (!live || live === APP_VERSION) return;
+    const busy = $$('dialog').some(d => d.open) || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement ? document.activeElement.tagName : '');
+    if (!busy) { location.reload(); return; }
+    updateOffered = true;
+    toast('Вышла новая версия приложения', { sticky: true, action: { label: 'Обновить', fn: () => location.reload() } });
+  }
+  setTimeout(checkForUpdate, 1500);
+  setInterval(checkForUpdate, 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
 
   // ---------- смена дня при открытой вкладке ----------
   function tick() { if (today() !== renderedToday) render(); }
